@@ -140,7 +140,9 @@ This project is organized into a few simple folders:
     └── ...
 ```
 
+---
 ### UI_Logic.py
+---
 
 Contains all Tkinter screens and controls:
 
@@ -149,7 +151,9 @@ Contains all Tkinter screens and controls:
 - Sorting Visualizer
 - Complexity Grapher
 
+---
 ### Metodos_Ordenamiento/
+---
 
 Contains one file per sorting algorithm.
 
@@ -158,7 +162,9 @@ Each file exposes:
 - Animated version
 - Study version used by the complexity grapher
 
+---
 ### Assets/
+---
 
 Stores:
 
@@ -167,6 +173,7 @@ Stores:
 - Button sprites
 - Pixel font
 
+---
 > **Note**
 >
 > These folders should remain together, since `UI_Logic.py` loads algorithms and assets using relative paths.
