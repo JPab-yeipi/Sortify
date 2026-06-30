@@ -70,7 +70,7 @@ You can:
 The current algorithm, animation speed and number of elements are always shown at the bottom.
 
 <p align="center">
-<img src="Images/Vizualizer.png" width="900">
+<img src="Images/Visualizer.png" width="900">
 </p>
 
 ---
