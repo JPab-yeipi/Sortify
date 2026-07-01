@@ -1,13 +1,13 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def bubble_sort(arr, draw_func, delay):
     n = len(arr)
-    state = draw_func.state
+    estado = draw_func.estado
 
-    def step(i, j):
-        if state["value"] == "stopped":
+    def paso(i, j):
+        if estado["valor"] == "detenido":
             return
-        elif state["value"] == "paused":
-            draw_func.canvas.after(100, lambda: step(i, j))
+        elif estado["valor"] == "pausado":
+            draw_func.canvas.after(100, lambda: paso(i, j))
             return
 
         if i < n - 1:
@@ -18,23 +18,23 @@ def bubble_sort(arr, draw_func, delay):
                 draw_func(arr, ["red" if x == j or x == j + 1 else "gray" for x in range(len(arr))])
 
                 try:
-                    draw_func.canvas.after(int(delay * 100), lambda: step(i, j + 1))
-                except Exception as error:
-                    print("Animation interrupted:", error)
+                    draw_func.canvas.after(int(delay * 100), lambda: paso(i, j + 1))
+                except Exception as e:
+                    print("Se interrumpió la animación:", e)
             else:
-                draw_func.canvas.after(1, lambda: step(i + 1, 0))
+                draw_func.canvas.after(1, lambda: paso(i + 1, 0))
 
-    step(0, 0)
+    paso(0, 0)
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def bubble_sort_estudio(values):
-    steps = 0
-    n = len(values)
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def bubble_sort_estudio(lista):
+    pasos = 0
+    n = len(lista)
     for i in range(n):
         for j in range(0, n - i - 1):
-            steps += 1
-            if values[j] > values[j + 1]:
-                values[j], values[j + 1] = values[j + 1], values[j]
-                steps += 1
-    return steps
+            pasos += 1
+            if lista[j] > lista[j + 1]:
+                lista[j], lista[j + 1] = lista[j + 1], lista[j]
+                pasos += 1
+    return pasos

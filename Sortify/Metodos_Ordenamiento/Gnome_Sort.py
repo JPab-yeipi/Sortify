@@ -1,17 +1,16 @@
-# Gnome Sort algorithm with animated visualization for the charting tool.
+# Algoritmo con visualización animada (usado en la graficadora)
 def gnome_sort(arr, draw_func, delay):
-
-    state = draw_func.state
+    estado = draw_func.estado
     n = len(arr)
     index = 0
 
-    def step():
+    def paso():
         nonlocal index
 
-        if state["valor"] == "detenido":
+        if estado["valor"] == "detenido":
             return
-        if state["valor"] == "pausado":
-            draw_func.canvas.after(100, step)
+        if estado["valor"] == "pausado":
+            draw_func.canvas.after(100, paso)
             return
 
         if index < n:
@@ -21,37 +20,35 @@ def gnome_sort(arr, draw_func, delay):
                 index += 1
             else:
                 arr[index], arr[index - 1] = arr[index - 1], arr[index]
-                colors = ["orange" if x == index or x == index - 1 else "gray" for x in range(n)]
-                draw_func(arr, colors)
+                draw_func(arr, ["orange" if x == index or x == index - 1 else "gray" for x in range(n)])
                 index = max(0, index - 1)
-                draw_func.canvas.after(int(delay * 100), step)
+                draw_func.canvas.after(int(delay * 100), paso)
                 return
 
-            colors = ["green" if x < index else "gray" for x in range(n)]
-            draw_func(arr, colors)
-            draw_func.canvas.after(int(delay * 100), step)
+            draw_func(arr, ["green" if x < index else "gray" for x in range(n)])
+            draw_func.canvas.after(int(delay * 100), paso)
         else:
             draw_func(arr, ["green"] * n)
 
-    step()
+    paso()
 
-# Non-visual Gnome Sort algorithm used for complexity analysis.
-def gnome_sort_estudio(values):
 
-    steps = 0
-    n = len(values)
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def gnome_sort_estudio(lista):
+    pasos = 0
+    n = len(lista)
     index = 0
 
     while index < n:
         if index == 0:
             index += 1
-            steps += 1
-        elif values[index] >= values[index - 1]:
-            steps += 1
+            pasos += 1
+        elif lista[index] >= lista[index - 1]:
+            pasos += 1
             index += 1
         else:
-            values[index], values[index - 1] = values[index - 1], values[index]
-            steps += 2
+            lista[index], lista[index - 1] = lista[index - 1], lista[index]
+            pasos += 2
             index = max(0, index - 1)
 
-    return steps
+    return pasos

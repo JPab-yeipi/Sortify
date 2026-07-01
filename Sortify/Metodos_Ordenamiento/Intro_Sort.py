@@ -1,41 +1,41 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def intro_sort(arr, draw_func, delay):
     import math
-    state = draw_func.state
+    estado = draw_func.estado
     n = len(arr)
 
     def insertion_sort(start, end, callback):
-        def step(i):
+        def paso(i):
             if i > end:
                 callback()
                 return
             key = arr[i]
             j = i - 1
 
-            def move(j_inner):
-                if state["value"] == "stopped":
+            def mover(j_interno):
+                if estado["valor"] == "detenido":
                     return
-                if state["value"] == "paused":
-                    draw_func.canvas.after(100, lambda: move(j_inner))
+                if estado["valor"] == "pausado":
+                    draw_func.canvas.after(100, lambda: mover(j_interno))
                     return
 
-                if j_inner >= start and arr[j_inner] > key:
-                    arr[j_inner + 1] = arr[j_inner]
-                    draw_func(arr, ["orange" if x == j_inner or x == i else "gray" for x in range(len(arr))])
-                    draw_func.canvas.after(int(delay * 100), lambda: move(j_inner - 1))
+                if j_interno >= start and arr[j_interno] > key:
+                    arr[j_interno + 1] = arr[j_interno]
+                    draw_func(arr, ["orange" if x == j_interno or x == i else "gray" for x in range(len(arr))])
+                    draw_func.canvas.after(int(delay * 100), lambda: mover(j_interno - 1))
                 else:
-                    arr[j_inner + 1] = key
+                    arr[j_interno + 1] = key
                     draw_func(arr, ["green" if x <= i else "gray" for x in range(len(arr))])
-                    draw_func.canvas.after(int(delay * 100), lambda: step(i + 1))
+                    draw_func.canvas.after(int(delay * 100), lambda: paso(i + 1))
 
-            move(j)
+            mover(j)
 
-        step(start + 1)
+        paso(start + 1)
 
     def heapify(n, i, offset, callback):
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        if state["value"] == "paused":
+        if estado["valor"] == "pausado":
             draw_func.canvas.after(100, lambda: heapify(n, i, offset, callback))
             return
 
@@ -89,9 +89,9 @@ def intro_sort(arr, draw_func, delay):
         build()
 
     def quick_sort(start, end, depth_limit, callback):
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        if state["value"] == "paused":
+        if estado["valor"] == "pausado":
             draw_func.canvas.after(100, lambda: quick_sort(start, end, depth_limit, callback))
             return
 
@@ -128,55 +128,55 @@ def intro_sort(arr, draw_func, delay):
     quick_sort(0, len(arr) - 1, depth_limit, lambda: draw_func(arr, ["green"] * len(arr)))
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def intro_sort_estudio(values):
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def intro_sort_estudio(lista):
     import math
-    steps = 0
+    pasos = 0
 
     def insertion_sort(start, end):
-        nonlocal steps
+        nonlocal pasos
         for i in range(start + 1, end + 1):
-            key = values[i]
+            key = lista[i]
             j = i - 1
-            while j >= start and values[j] > key:
-                steps += 1
-                values[j + 1] = values[j]
-                steps += 1
+            while j >= start and lista[j] > key:
+                pasos += 1
+                lista[j + 1] = lista[j]
+                pasos += 1
                 j -= 1
-            values[j + 1] = key
-            steps += 1
+            lista[j + 1] = key
+            pasos += 1
 
     def heapify(n, i, offset):
-        nonlocal steps
+        nonlocal pasos
         largest = i
         l = 2 * i + 1
         r = 2 * i + 2
 
-        steps += 1
-        if l < n and values[offset + l] > values[offset + largest]:
+        pasos += 1
+        if l < n and lista[offset + l] > lista[offset + largest]:
             largest = l
 
-        steps += 1
-        if r < n and values[offset + r] > values[offset + largest]:
+        pasos += 1
+        if r < n and lista[offset + r] > lista[offset + largest]:
             largest = r
 
         if largest != i:
-            values[offset + i], values[offset + largest] = values[offset + largest], values[offset + i]
-            steps += 1
+            lista[offset + i], lista[offset + largest] = lista[offset + largest], lista[offset + i]
+            pasos += 1
             heapify(n, largest, offset)
 
     def heap_sort(start, end):
-        nonlocal steps
+        nonlocal pasos
         n = end - start + 1
         for i in range(n // 2 - 1, -1, -1):
             heapify(n, i, start)
         for i in range(n - 1, 0, -1):
-            values[start + i], values[start] = values[start], values[start + i]
-            steps += 1
+            lista[start + i], lista[start] = lista[start], lista[start + i]
+            pasos += 1
             heapify(i, 0, start)
 
     def quick_sort(start, end, depth_limit):
-        nonlocal steps
+        nonlocal pasos
         size = end - start + 1
         if size <= 16:
             insertion_sort(start, end)
@@ -185,23 +185,23 @@ def intro_sort_estudio(values):
             heap_sort(start, end)
             return
 
-        pivot = values[end]
+        pivot = lista[end]
         i = start - 1
         for j in range(start, end):
-            steps += 1
-            if values[j] <= pivot:
+            pasos += 1
+            if lista[j] <= pivot:
                 i += 1
-                values[i], values[j] = values[j], values[i]
-                steps += 1
+                lista[i], lista[j] = lista[j], lista[i]
+                pasos += 1
 
-        values[i + 1], values[end] = values[end], values[i + 1]
-        steps += 1
+        lista[i + 1], lista[end] = lista[end], lista[i + 1]
+        pasos += 1
         p = i + 1
 
         quick_sort(start, p - 1, depth_limit - 1)
         quick_sort(p + 1, end, depth_limit - 1)
 
-    depth_limit = 2 * math.floor(math.log2(len(values))) if len(values) > 0 else 0
-    quick_sort(0, len(values) - 1, depth_limit)
+    depth_limit = 2 * math.floor(math.log2(len(lista))) if len(lista) > 0 else 0
+    quick_sort(0, len(lista) - 1, depth_limit)
 
-    return steps
+    return pasos

@@ -1,6 +1,6 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def shell_sort(arr, draw_func, delay):
-    state = draw_func.state
+    estado = draw_func.estado
     n = len(arr)
     gaps = []
     gap = n // 2
@@ -8,89 +8,89 @@ def shell_sort(arr, draw_func, delay):
         gaps.append(gap)
         gap //= 2
 
-    gap_index = 0
+    i_gap = 0
     i = 0
     j = 0
     temp = None
-    phase = "start"
+    fase = "inicio"
 
-    def step():
-        nonlocal gap_index, i, j, temp, phase
+    def paso():
+        nonlocal i_gap, i, j, temp, fase
 
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        if state["value"] == "paused":
-            draw_func.canvas.after(100, step)
+        if estado["valor"] == "pausado":
+            draw_func.canvas.after(100, paso)
             return
 
-        if gap_index >= len(gaps):
+        if i_gap >= len(gaps):
             draw_func(arr, ["green"] * n)
             return
 
-        gap = gaps[gap_index]
+        gap = gaps[i_gap]
 
-        if phase == "start":
+        if fase == "inicio":
             if i >= n:
-                gap_index += 1
-                if gap_index < len(gaps):
-                    gap = gaps[gap_index]
+                i_gap += 1
+                if i_gap < len(gaps):
+                    gap = gaps[i_gap]
                     i = gap
-                    phase = "start"
-                    draw_func.canvas.after(1, step)
+                    fase = "inicio"
+                    draw_func.canvas.after(1, paso)
                 else:
                     draw_func(arr, ["green"] * n)
                 return
             temp = arr[i]
             j = i
-            phase = "comparing"
-            draw_func.canvas.after(1, step)
+            fase = "comparando"
+            draw_func.canvas.after(1, paso)
 
-        elif phase == "comparing":
+        elif fase == "comparando":
             if j >= gap and arr[j - gap] > temp:
                 arr[j] = arr[j - gap]
                 draw_func(arr, ["orange" if x == j or x == j - gap else "gray" for x in range(n)])
                 j -= gap
-                draw_func.canvas.after(int(delay * 100), step)
+                draw_func.canvas.after(int(delay * 100), paso)
             else:
-                phase = "inserting"
-                draw_func.canvas.after(1, step)
+                fase = "insertando"
+                draw_func.canvas.after(1, paso)
 
-        elif phase == "inserting":
+        elif fase == "insertando":
             arr[j] = temp
             draw_func(arr, ["green" if x == j else "gray" for x in range(n)])
             i += 1
-            phase = "start"
-            draw_func.canvas.after(int(delay * 100), step)
+            fase = "inicio"
+            draw_func.canvas.after(int(delay * 100), paso)
 
     i = gaps[0] if gaps else 0
-    step()
+    paso()
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def shell_sort_estudio(values):
-    steps = 0
-    n = len(values)
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def shell_sort_estudio(lista):
+    pasos = 0
+    n = len(lista)
     gap = n // 2
 
     while gap > 0:
         for i in range(gap, n):
-            steps += 1
+            pasos += 1
 
-            temp = values[i]
+            temp = lista[i]
             j = i
 
             while j >= gap:
-                steps += 1
-                if values[j - gap] > temp:
-                    values[j] = values[j - gap]
-                    steps += 1
+                pasos += 1
+                if lista[j - gap] > temp:
+                    lista[j] = lista[j - gap]
+                    pasos += 1
                     j -= gap
                 else:
                     break
 
-            values[j] = temp
-            steps += 1
+            lista[j] = temp
+            pasos += 1
 
         gap //= 2
 
-    return steps
+    return pasos

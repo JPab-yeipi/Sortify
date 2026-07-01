@@ -1,6 +1,6 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def radix_sort(arr, draw_func, delay):
-    state = draw_func.state
+    estado = draw_func.estado
 
     if len(arr) == 0:
         return
@@ -8,94 +8,94 @@ def radix_sort(arr, draw_func, delay):
     max_num = max(arr)
     exp = 1
 
-    def counting_sort_by_digit(exp, i=0, phase="counting", count=None, output=None):
+    def counting_sort_by_digit(exp, i=0, fase="contar", count=None, output=None):
         n = len(arr)
         if count is None:
             count = [0] * 10
             output = [0] * n
 
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        if state["value"] == "paused":
-            draw_func.canvas.after(100, lambda: counting_sort_by_digit(exp, i, phase, count, output))
+        if estado["valor"] == "pausado":
+            draw_func.canvas.after(100, lambda: counting_sort_by_digit(exp, i, fase, count, output))
             return
 
-        if phase == "counting":
+        if fase == "contar":
             if i < n:
                 index = arr[i] // exp
                 count[index % 10] += 1
                 draw_func(arr, ["orange" if x == i else "gray" for x in range(n)])
-                draw_func.canvas.after(int(delay * 100), lambda: counting_sort_by_digit(exp, i + 1, "counting", count, output))
+                draw_func.canvas.after(int(delay * 100), lambda: counting_sort_by_digit(exp, i + 1, "contar", count, output))
             else:
-                draw_func.canvas.after(1, lambda: counting_sort_by_digit(exp, 1, "accumulating", count, output))
+                draw_func.canvas.after(1, lambda: counting_sort_by_digit(exp, 1, "acumular", count, output))
 
-        elif phase == "accumulating":
+        elif fase == "acumular":
             if i < 10:
                 count[i] += count[i - 1]
-                draw_func.canvas.after(1, lambda: counting_sort_by_digit(exp, i + 1, "accumulating", count, output))
+                draw_func.canvas.after(1, lambda: counting_sort_by_digit(exp, i + 1, "acumular", count, output))
             else:
-                draw_func.canvas.after(1, lambda: counting_sort_by_digit(exp, n - 1, "sorting", count, output))
+                draw_func.canvas.after(1, lambda: counting_sort_by_digit(exp, n - 1, "ordenar", count, output))
 
-        elif phase == "sorting":
+        elif fase == "ordenar":
             if i >= 0:
                 index = arr[i] // exp
                 output[count[index % 10] - 1] = arr[i]
                 count[index % 10] -= 1
-                draw_func.canvas.after(1, lambda: counting_sort_by_digit(exp, i - 1, "sorting", count, output))
+                draw_func.canvas.after(1, lambda: counting_sort_by_digit(exp, i - 1, "ordenar", count, output))
             else:
-                draw_func.canvas.after(1, lambda: counting_sort_by_digit(exp, 0, "rewriting", count, output))
+                draw_func.canvas.after(1, lambda: counting_sort_by_digit(exp, 0, "reescribir", count, output))
 
-        elif phase == "rewriting":
+        elif fase == "reescribir":
             if i < n:
                 arr[i] = output[i]
                 draw_func(arr, ["blue" if x == i else "gray" for x in range(n)])
-                draw_func.canvas.after(int(delay * 100), lambda: counting_sort_by_digit(exp, i + 1, "rewriting", count, output))
+                draw_func.canvas.after(int(delay * 100), lambda: counting_sort_by_digit(exp, i + 1, "reescribir", count, output))
             else:
-                next_exp(exp)
+                siguiente_exp(exp)
 
-    def next_exp(current_exp):
-        following = current_exp * 10
-        if max_num // following > 0:
-            counting_sort_by_digit(following)
+    def siguiente_exp(exp_actual):
+        siguiente = exp_actual * 10
+        if max_num // siguiente > 0:
+            counting_sort_by_digit(siguiente)
         else:
             draw_func(arr, ["green"] * len(arr))
 
     counting_sort_by_digit(exp)
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def radix_sort_estudio(values):
-    steps = 0
-    if len(values) == 0:
-        return steps
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def radix_sort_estudio(lista):
+    pasos = 0
+    if len(lista) == 0:
+        return pasos
 
-    max_num = max(values)
+    max_num = max(lista)
     exp = 1
-    n = len(values)
+    n = len(lista)
 
     while max_num // exp > 0:
         count = [0] * 10
         output = [0] * n
 
         for i in range(n):
-            index = values[i] // exp
+            index = lista[i] // exp
             count[index % 10] += 1
-            steps += 1
+            pasos += 1
 
         for i in range(1, 10):
             count[i] += count[i - 1]
-            steps += 1
+            pasos += 1
 
         for i in range(n - 1, -1, -1):
-            index = values[i] // exp
-            output[count[index % 10] - 1] = values[i]
+            index = lista[i] // exp
+            output[count[index % 10] - 1] = lista[i]
             count[index % 10] -= 1
-            steps += 2
+            pasos += 2
 
         for i in range(n):
-            values[i] = output[i]
-            steps += 1
+            lista[i] = output[i]
+            pasos += 1
 
         exp *= 10
 
-    return steps
+    return pasos

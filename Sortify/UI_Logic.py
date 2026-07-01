@@ -14,22 +14,17 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # --- Asset paths ---
-ICON_PATH = os.path.join(BASE_DIR, "Assets", "Icon", "Icon_Sortify.ico")
-LOGO_IMAGE_PATH = os.path.join(BASE_DIR, "Assets", "Titulos", "Logo_Sortify.png")
-LOGO_IMAGE_PATH_2 = os.path.join(BASE_DIR, "Assets", "Titulos", "Logo_menuPrincipal_1.png")
-SUBTITLE_IMAGE_PATH = os.path.join(BASE_DIR, "Assets", "Titulos", "Titulo_sorts2.png")
-BUTTONS_PATH = os.path.join(BASE_DIR, "Assets", "Botones")
-SETTINGS_TITLE_PATH = os.path.join(BASE_DIR, "Assets", "Titulos", "Titulo_Ajustes.png")
-CONTROL_TITLE_PATH = os.path.join(BASE_DIR, "Assets", "Titulos", "Titulo_graficadora.png")
-COMPLEXITY_TITLE_PATH = os.path.join(BASE_DIR, "Assets", "Titulos", "Titulo_complejidad.png")
+RUTA_ICONO = os.path.join(BASE_DIR, "Assets", "Icon", "Icon_Sortify.ico")
+RUTA_IMAGEN_MP = os.path.join(BASE_DIR, "Assets", "Titulos", "Logo_Sortify.png")
+RUTA_IMAGEN_MP_2 = os.path.join(BASE_DIR, "Assets", "Titulos", "Logo_menuPrincipal_1.png")
+RUTA_IMAGEN_MS = os.path.join(BASE_DIR, "Assets", "Titulos", "Titulo_sorts2.png")
+RUTA_BOTONES = os.path.join(BASE_DIR, "Assets", "Botones")
+RUTA_TITULO_AJUSTES = os.path.join(BASE_DIR, "Assets", "Titulos", "Titulo_Ajustes.png")
+RUTA_TITULO_CTRL = os.path.join(BASE_DIR, "Assets", "Titulos", "Titulo_graficadora.png")
+RUTA_TITULO_COMPLEJIDAD = os.path.join(BASE_DIR, "Assets", "Titulos", "Titulo_complejidad.png")
 
-# --- Theme constants ---
-BACKGROUND_COLOR = "#e8e4e3"
-PRESSED_TEXT_COLOR = "#b0b0b0"
-DEFAULT_FONT_NAME = "Pixelify Sans"
-
-# --- Sorting methods: (display name, column, row, button color) ---
-METHODS = [
+# Definición de métodos de ordenamiento y sus colores asociados
+metodos = [
     ("Bubble Sort", 1, 1, "verde"),
     ("Counting Sort", 2, 1, "naranja"),
     ("Insertion Sort", 3, 1, "azul"),
@@ -49,505 +44,605 @@ METHODS = [
     ("Comb Sort", 1, 5, "morado"),
     ("Cocktail Sort", 2, 5, "azul"),
     ("Bitwise Sort", 3, 5, "oro"),
-    ("Pancake Sort", 4, 5, "verde"),
+    ("Pancake Sort", 4, 5, "verde")
 ]
 
-# Button color keys must stay in sync with the "SBtn_<color>_on/off.png" assets.
-COLORS = sorted({color for _, _, _, color in METHODS})
+# Colores disponibles para los botones
+colores = [
+    "verde", "naranja", "azul", "morado", "rojo", "oro", "gris", "vino",
+    "amarillo", "cian", "verdeAzul", "azul_claro", "green", "rosa", "purple"
+]
 
+# --- MENÚ PRINCIPAL ---
+def Menu_Principal():
+    ventana = tk.Tk()
+    ventana.title("SORTIFY - MENÚ PRINCIPAL")
+    ventana.geometry("1050x650")
+    ventana.configure(bg="#e8e4e3")
+    ventana.iconbitmap(RUTA_ICONO)
 
-# =============================================================
-# Generic UI helpers
-# =============================================================
+    # Carga de imágenes de los títulos
+    img_mp = PhotoImage(file=RUTA_IMAGEN_MP).subsample(6, 6)
+    img_mp_2 = PhotoImage(file=RUTA_IMAGEN_MP_2).subsample(2, 2)
+    img_ms = PhotoImage(file=RUTA_IMAGEN_MS)
 
-def center_window(window):
-    """Center a window on the screen based on its current size."""
-    window.update_idletasks()
-    width, height = window.winfo_width(), window.winfo_height()
-    screen_width, screen_height = window.winfo_screenwidth(), window.winfo_screenheight()
-    x = (screen_width - width) // 2
-    y = (screen_height - height) // 2
-    window.geometry(f"{width}x{height}+{x}+{y}")
+    frame_titulo = tk.Frame(ventana, bg="#e8e4e3")
+    frame_titulo.pack(pady=10)
+    tk.Label(frame_titulo, image=img_mp, bg="#e8e4e3").pack(side="left", padx=5)
+    tk.Label(frame_titulo, image=img_mp_2, bg="#e8e4e3").pack(side="left", padx=5)
+    tk.Label(ventana, image=img_ms, bg="#e8e4e3").pack(pady=10)
 
+    # Frame que contiene canvas y texto inferior
+    frame_canvas = tk.Frame(ventana, bg="#e8e4e3")
+    frame_canvas.pack()
 
-def bind_button_behavior(canvas, image_id, image_off, image_on, on_click,
-                          text_id=None, shadow_id=None, shift=6):
-    """Attach press/release visual feedback (image swap + text shift) to a canvas button."""
-
-    def on_press(_event):
-        canvas.itemconfig(image_id, image=image_on)
-        if text_id is not None:
-            canvas.itemconfig(text_id, fill=PRESSED_TEXT_COLOR)
-            canvas.move(text_id, 0, shift)
-            canvas.move(shadow_id, 0, shift)
-
-    def on_release(_event):
-        canvas.itemconfig(image_id, image=image_off)
-        if text_id is not None:
-            canvas.itemconfig(text_id, fill="white")
-            canvas.move(text_id, 0, -shift)
-            canvas.move(shadow_id, 0, -shift)
-        if on_click:
-            on_click()
-
-    items = [image_id] + ([text_id, shadow_id] if text_id is not None else [])
-    for item in items:
-        canvas.tag_bind(item, "<ButtonPress-1>", on_press)
-        canvas.tag_bind(item, "<ButtonRelease-1>", on_release)
-
-
-def create_pixel_button(canvas, x, y, image_off, image_on, on_click,
-                         text=None, font=(DEFAULT_FONT_NAME, 16)):
-    """Create a press/release styled button centered at (x, y) on an existing canvas."""
-    image_id = canvas.create_image(x, y, image=image_off)
-    text_id = shadow_id = None
-    if text is not None:
-        shadow_id = canvas.create_text(x + 2, y + 2, text=text, font=font, fill="black")
-        text_id = canvas.create_text(x, y, text=text, font=font, fill="white")
-    bind_button_behavior(canvas, image_id, image_off, image_on, on_click, text_id, shadow_id)
-    return image_id, text_id, shadow_id
-
-
-def create_standalone_button(parent, image_off, image_on, on_click,
-                              text=None, font=(DEFAULT_FONT_NAME, 16),
-                              side="left", padx=10, pady=0):
-    """Create a button inside its own canvas (sized to the image) and pack it into parent."""
-    canvas = tk.Canvas(
-        parent, width=image_off.width(), height=image_off.height(),
-        bg=BACKGROUND_COLOR, highlightthickness=0
-    )
-    canvas.pack(side=side, padx=padx, pady=pady)
-    create_pixel_button(
-        canvas, image_off.width() // 2, image_off.height() // 2,
-        image_off, image_on, on_click, text=text, font=font
-    )
-    return canvas
-
-
-# =============================================================
-# Algorithm loading helpers
-# =============================================================
-
-def load_sort_module(method_name):
-    """Dynamically import the module that implements the given sorting method."""
-    module_name = method_name.title().replace(" ", "_")
-    try:
-        # Folder name kept as "Metodos_Ordenamiento" to match the existing module structure.
-        return importlib.import_module(f"Metodos_Ordenamiento.{module_name}")
-    except ModuleNotFoundError as error:
-        print(f"Could not load module for '{method_name}': {error}")
-        return None
-
-
-def load_sort_function(method_name):
-    """Return the sorting function (animated version) for the given method, or None."""
-    module = load_sort_module(method_name)
-    if module is None:
-        return None
-    function_name = method_name.lower().replace(" ", "_")
-    function = getattr(module, function_name, None)
-    if function is None:
-        print(f"Function '{function_name}' not found for '{method_name}'.")
-    return function
-
-
-def load_study_function(method_name):
-    """Return the complexity-study function for the given method, or None.
-
-    Kept with the "_estudio" suffix to match the naming convention used in the
-    Metodos_Ordenamiento files; update both sides together if that changes.
-    """
-    module = load_sort_module(method_name)
-    if module is None:
-        return None
-    function_name = method_name.lower().replace(" ", "_") + "_estudio"
-    function = getattr(module, function_name, None)
-    if function is None:
-        print(f"Function '{function_name}' not found for '{method_name}'.")
-    return function
-
-
-# =============================================================
-# MAIN MENU
-# =============================================================
-
-def main_menu():
-    window = tk.Tk()
-    window.title("SORTIFY - MAIN MENU")
-    window.geometry("1050x650")
-    window.configure(bg=BACKGROUND_COLOR)
-    window.iconbitmap(ICON_PATH)
-
-    # Title images
-    logo_image = PhotoImage(file=LOGO_IMAGE_PATH).subsample(6, 6)
-    logo_image_2 = PhotoImage(file=LOGO_IMAGE_PATH_2).subsample(2, 2)
-    subtitle_image = PhotoImage(file=SUBTITLE_IMAGE_PATH)
-
-    title_frame = tk.Frame(window, bg=BACKGROUND_COLOR)
-    title_frame.pack(pady=10)
-    tk.Label(title_frame, image=logo_image, bg=BACKGROUND_COLOR).pack(side="left", padx=5)
-    tk.Label(title_frame, image=logo_image_2, bg=BACKGROUND_COLOR).pack(side="left", padx=5)
-    tk.Label(window, image=subtitle_image, bg=BACKGROUND_COLOR).pack(pady=10)
-
-    canvas_frame = tk.Frame(window, bg=BACKGROUND_COLOR)
-    canvas_frame.pack()
-
-    canvas = tk.Canvas(canvas_frame, width=1100, height=430, bg=BACKGROUND_COLOR, highlightthickness=0)
+    # Canvas para botones
+    canvas = tk.Canvas(frame_canvas, width=1100, height=430, bg="#e8e4e3", highlightthickness=0)
     canvas.pack()
 
-    images_on = {color: PhotoImage(file=os.path.join(BUTTONS_PATH, f"SBtn_{color}_on.png")) for color in COLORS}
-    images_off = {color: PhotoImage(file=os.path.join(BUTTONS_PATH, f"SBtn_{color}_off.png")) for color in COLORS}
+    # Carga de imágenes para los botones
+    imagenes_on = {color: PhotoImage(file=os.path.join(RUTA_BOTONES, f"SBtn_{color}_on.png")) for color in colores}
+    imagenes_off = {color: PhotoImage(file=os.path.join(RUTA_BOTONES, f"SBtn_{color}_off.png")) for color in colores}
 
-    font = (DEFAULT_FONT_NAME, 20)
-    spacing_x = 260
-    spacing_y = 85
+    fuente = ("Pixelify Sans", 20)
+    espacio_x = 260
+    espacio_y = 85
 
-    for name, col, row, color in METHODS:
-        x = spacing_x * col - spacing_x / 2
-        y = spacing_y * row - spacing_y / 2
-        create_pixel_button(
-            canvas, x, y,
-            images_off[color], images_on[color],
-            on_click=lambda option=name: settings_window(option, window),
-            text=name, font=font
-        )
+    for texto, col, fila, color in metodos:
+        x = espacio_x * col - espacio_x / 2
+        y = espacio_y * fila - espacio_y / 2
 
-    footer_label = tk.Label(
-        window,
-        text="| Install the Pixelify Sans font located in Assets for a better look |"
-             "                     Sortify-v.1.2.0",
-        font=font,
+        imagen_id = canvas.create_image(x, y + 2, image=imagenes_off[color])
+        sombra_id = canvas.create_text(x + 2, y + 2, text=texto, font=fuente, fill="black")
+        texto_id = canvas.create_text(x, y, text=texto, font=fuente, fill="white")
+
+        def al_presionar(event, img=imagen_id, txt=texto_id, sombra=sombra_id, col=color):
+            canvas.itemconfig(img, image=imagenes_on[col])
+            canvas.itemconfig(txt, fill="#b0b0b0")
+            canvas.move(txt, 0, 6)
+            canvas.move(sombra, 0, 6)
+
+        def al_soltar(event, img=imagen_id, txt=texto_id, sombra=sombra_id, col=color, nombre=texto):
+            canvas.itemconfig(img, image=imagenes_off[col])
+            canvas.itemconfig(txt, fill="white")
+            canvas.move(txt, 0, -6)
+            canvas.move(sombra, 0, -6)
+            Ajustes(nombre, ventana)
+
+        for item in [imagen_id, texto_id, sombra_id]:
+            canvas.tag_bind(item, "<ButtonPress-1>", al_presionar)
+            canvas.tag_bind(item, "<ButtonRelease-1>", al_soltar)
+
+    # Texto final debajo del canvas
+    texto_final = tk.Label(
+        ventana,
+        text="| Instala la fuente Pixelify Sans ubicada en Assets para mejorar la estetica |         Sortify-v.1.2.0",
+        font=fuente,
         fg="black",
-        bg=BACKGROUND_COLOR
+        bg="#e8e4e3"
     )
-    footer_label.pack(pady=5)
+    texto_final.pack(pady=5)
 
-    center_window(window)
-    window.mainloop()
+    # Centrar la ventana
+    ventana.update_idletasks()
+    w, h = ventana.winfo_width(), ventana.winfo_height()
+    sw, sh = ventana.winfo_screenwidth(), ventana.winfo_screenheight()
+    x, y = (sw - w) // 2, (sh - h) // 2
+    ventana.geometry(f"{w}x{h}+{x}+{y}")
 
-
-# =============================================================
-# SETTINGS WINDOW
-# =============================================================
-
-def settings_window(option_name, previous_window):
-    if previous_window is not None:
-        previous_window.destroy()
-
-    window = tk.Tk()
-    window.title("SETTINGS")
-    window.geometry("800x650")
-    window.configure(bg=BACKGROUND_COLOR)
-    window.iconbitmap(ICON_PATH)
-
-    settings_title_image = PhotoImage(file=SETTINGS_TITLE_PATH)
-    tk.Label(window, image=settings_title_image, bg=BACKGROUND_COLOR).pack(pady=20)
-
-    text_font = (DEFAULT_FONT_NAME, 24)
-    tk.Label(
-        window, text=f"Selected option: {option_name}",
-        font=text_font, bg=BACKGROUND_COLOR, fg="black"
-    ).pack(pady=10)
-
-    controls_frame = tk.Frame(window, bg=BACKGROUND_COLOR)
-    controls_frame.pack(pady=20)
-
-    speed_var = tk.DoubleVar(value=1)
-    tk.Scale(
-        controls_frame, from_=0.1, to=5.0, resolution=0.1, orient="horizontal",
-        variable=speed_var, label="Speed", bg=BACKGROUND_COLOR, font=(DEFAULT_FONT_NAME, 16), fg="black",
-        troughcolor="#ed5b37", activebackground=BACKGROUND_COLOR, length=300, width=30, sliderlength=40
-    ).pack(side="left", padx=40)
-
-    elements_var = tk.IntVar(value=100)
-    tk.Scale(
-        controls_frame, from_=10, to=1000, resolution=10, orient="horizontal",
-        variable=elements_var, label="Elements", bg=BACKGROUND_COLOR, font=(DEFAULT_FONT_NAME, 16), fg="black",
-        troughcolor="#375eed", activebackground=BACKGROUND_COLOR, length=300, width=30, sliderlength=40
-    ).pack(side="left", padx=40)
-
-    buttons_frame = tk.Frame(window, bg=BACKGROUND_COLOR)
-    buttons_frame.pack(pady=80)
-
-    chart_off = PhotoImage(file=os.path.join(BUTTONS_PATH, "btn_graficadora_off.png"))
-    chart_on = PhotoImage(file=os.path.join(BUTTONS_PATH, "btn_graficadora_on.png"))
-    complexity_off = PhotoImage(file=os.path.join(BUTTONS_PATH, "btn_complejidad_off.png"))
-    complexity_on = PhotoImage(file=os.path.join(BUTTONS_PATH, "btn_complejidad_on.png"))
-
-    def open_complexity():
-        window.destroy()
-        complexity_window(option_name)
-
-    def open_chart():
-        window.destroy()
-        chart_window(option_name, speed_var.get(), elements_var.get())
-
-    create_standalone_button(buttons_frame, complexity_off, complexity_on, open_complexity, side="left", padx=40)
-    create_standalone_button(buttons_frame, chart_off, chart_on, open_chart, side="left", padx=40)
-
-    # Back button
-    back_off_image = PhotoImage(file=os.path.join(BUTTONS_PATH, "SBtn_rojo_off.png"))
-    back_on_image = PhotoImage(file=os.path.join(BUTTONS_PATH, "SBtn_rojo_on.png"))
-
-    back_frame = tk.Frame(window, bg=BACKGROUND_COLOR)
-    back_frame.pack(side="bottom", anchor="w", padx=20, pady=10)
-
-    def go_back():
-        window.destroy()
-        main_menu()
-
-    create_standalone_button(
-        back_frame, back_off_image, back_on_image, go_back,
-        text="\u2190 Back", font=(DEFAULT_FONT_NAME, 20), side="left", padx=0, pady=0
-    )
-
-    center_window(window)
-    window.mainloop()
+    ventana.mainloop()
 
 
-# =============================================================
-# CHART (VISUALIZATION) WINDOW
-# =============================================================
+# --- VENTANA DE AJUSTES ---
+def Ajustes(nombre_opcion, ventana_anterior):
+    if ventana_anterior is not None:
+        ventana_anterior.destroy()
 
-def chart_window(option_name, speed, amount):
-    vis_window = tk.Tk()
-    vis_window.title("Algorithm Visualization")
-    vis_window.geometry("1000x470+200+100")
-    vis_window.configure(bg=BACKGROUND_COLOR)
+    ventana = tk.Tk()
+    ventana.title("AJUSTES")
+    ventana.geometry("800x600")
+    ventana.configure(bg="#e8e4e3")
+    ventana.iconbitmap(RUTA_ICONO)
 
-    # Shared state between the control functions: "stopped", "running" or "paused".
-    state = {"value": "stopped"}
+    titulo_ajustes = PhotoImage(file=RUTA_TITULO_AJUSTES)
+    tk.Label(ventana, image=titulo_ajustes, bg="#e8e4e3").pack(pady=20)
 
-    canvas = tk.Canvas(vis_window, width=980, height=450, bg="white", highlightthickness=0)
+    fuente_texto = ("Pixelify Sans", 24)
+    texto = f"Opción seleccionada: {nombre_opcion}"
+    tk.Label(ventana, text=texto, font=fuente_texto, bg="#e8e4e3", fg="black").pack(pady=10)
+
+    frame_controles = tk.Frame(ventana, bg="#e8e4e3")
+    frame_controles.pack(pady=20)
+
+    # Slider para ajustar la velocidad
+    velocidad_var = tk.DoubleVar(value=1)
+    tk.Scale(frame_controles, from_=0.1, to=5.0, resolution=0.1, orient="horizontal",
+             variable=velocidad_var, label="Velocidad", bg="#e8e4e3", font=("Pixelify Sans", 16), fg="black",
+             troughcolor="#ed5b37", activebackground="#e8e4e3", length=300, width=30, sliderlength=40
+             ).pack(side="left", padx=40)
+
+    # Slider para ajustar la cantidad de elementos
+    elementos_var = tk.IntVar(value=100)
+    tk.Scale(frame_controles, from_=10, to=1000, resolution=10, orient="horizontal",
+             variable=elementos_var, label="Elementos", bg="#e8e4e3", font=("Pixelify Sans", 16), fg="black",
+             troughcolor="#375eed", activebackground="#e8e4e3", length=300, width=30, sliderlength=40
+             ).pack(side="left", padx=40)
+
+    frame_botones = tk.Frame(ventana, bg="#e8e4e3")
+    frame_botones.pack(pady=80)
+
+    graficadora_off = PhotoImage(file=os.path.join(BASE_DIR, "Assets", "Botones", "btn_graficadora_off.png"))
+    graficadora_on = PhotoImage(file=os.path.join(BASE_DIR, "Assets", "Botones", "btn_graficadora_on.png"))
+    complejidad_off = PhotoImage(file=os.path.join(BASE_DIR, "Assets", "Botones", "btn_complejidad_off.png"))
+    complejidad_on = PhotoImage(file=os.path.join(BASE_DIR, "Assets", "Botones", "btn_complejidad_on.png"))
+
+    # Botón para Complejidad
+    canvas_b1 = tk.Canvas(frame_botones, width=complejidad_off.width(), height=complejidad_off.height(),
+                          bg="#e8e4e3", highlightthickness=0)
+    canvas_b1.pack(side="left", padx=40)
+    b1_img = canvas_b1.create_image(complejidad_off.width() // 2, complejidad_off.height() // 2, image=complejidad_off)
+
+    def presionar_b1(event):
+        canvas_b1.itemconfig(b1_img, image=complejidad_on)
+
+    def soltar_b1(event):
+        canvas_b1.itemconfig(b1_img, image=complejidad_off)
+        Ventana_Complejidad(nombre_opcion)
+
+    canvas_b1.tag_bind(b1_img, "<ButtonPress-1>", presionar_b1)
+    canvas_b1.tag_bind(b1_img, "<ButtonRelease-1>", soltar_b1)
+
+    #Boton para graficadora
+    canvas_b2 = tk.Canvas(frame_botones, width=graficadora_off.width(), height=graficadora_off.height(),
+                          bg="#e8e4e3", highlightthickness=0)
+    canvas_b2.pack(side="left", padx=40)
+    b2_img = canvas_b2.create_image(graficadora_off.width() // 2, graficadora_off.height() // 2, image=graficadora_off)
+
+    def presionar_b2(event):
+        canvas_b2.itemconfig(b2_img, image=graficadora_on)
+
+    def soltar_b2(event):
+        canvas_b2.itemconfig(b2_img, image=graficadora_off)
+        ventana.destroy()
+        Graficadora(nombre_opcion, velocidad_var.get(), elementos_var.get())
+
+    canvas_b2.tag_bind(b2_img, "<ButtonPress-1>", presionar_b2)
+    canvas_b2.tag_bind(b2_img, "<ButtonRelease-1>", soltar_b2)
+
+    # Botón para regresar al menú principal
+    img_btn_normal = PhotoImage(file=os.path.join(RUTA_BOTONES, "SBtn_rojo_off.png"))
+    img_btn_presionado = PhotoImage(file=os.path.join(RUTA_BOTONES, "SBtn_rojo_on.png"))
+
+    frame_regresar = tk.Frame(ventana, bg="#e8e4e3")
+    frame_regresar.pack(side="bottom", anchor="w", padx=20, pady=10)
+
+    canvas_btn = tk.Canvas(frame_regresar, width=img_btn_normal.width(), height=img_btn_normal.height(),
+                           bg="#e8e4e3", highlightthickness=0)
+    canvas_btn.pack()
+
+    img_id = canvas_btn.create_image(img_btn_normal.width() // 2, img_btn_normal.height() // 2, image=img_btn_normal)
+    sombra_id = canvas_btn.create_text(img_btn_normal.width() // 2 + 2, img_btn_normal.height() // 2 + 2,
+                                       text="← Regresar", font=("Pixelify Sans", 20), fill="black")
+    texto_id = canvas_btn.create_text(img_btn_normal.width() // 2, img_btn_normal.height() // 2,
+                                      text="← Regresar", font=("Pixelify Sans", 20), fill="white")
+
+    def presionar_regresar(event):
+        canvas_btn.itemconfig(img_id, image=img_btn_presionado)
+        canvas_btn.itemconfig(texto_id, fill="#b0b0b0")
+        canvas_btn.move(texto_id, 0, 6)
+        canvas_btn.move(sombra_id, 0, 6)
+
+    def soltar_regresar(event):
+        canvas_btn.itemconfig(img_id, image=img_btn_normal)
+        canvas_btn.itemconfig(texto_id, fill="white")
+        canvas_btn.move(texto_id, 0, -6)
+        canvas_btn.move(sombra_id, 0, -6)
+        ventana.destroy()
+        Menu_Principal()
+
+    for item in [img_id, texto_id, sombra_id]:
+        canvas_btn.tag_bind(item, "<ButtonPress-1>", presionar_regresar)
+        canvas_btn.tag_bind(item, "<ButtonRelease-1>", soltar_regresar)
+
+    ventana.update_idletasks()
+    w, h = ventana.winfo_width(), ventana.winfo_height()
+    sw, sh = ventana.winfo_screenwidth(), ventana.winfo_screenheight()
+    x, y = (sw - w) // 2, (sh - h) // 2
+    ventana.geometry(f"{w}x{h}+{x}+{y}")
+
+    ventana.mainloop()
+
+
+# --- VENTANAS DE GRAFICADORA ---
+def Graficadora(nombre_opcion, velocidad, cantidad):
+    ventana_vis = tk.Tk()
+    ventana_vis.title("Visualización del Método")
+    ventana_vis.geometry("1000x470+200+100")
+    ventana_vis.configure(bg="#e8e4e3")
+
+    # Estado compartido entre las funciones: 'detenido', 'corriendo' o 'pausado'
+    estado = {"valor": "detenido"}
+
+    # Área de dibujo para visualizar las barras
+    canvas = tk.Canvas(ventana_vis, width=980, height=450, bg="white", highlightthickness=0)
     canvas.pack(padx=10, pady=10)
 
-    data = random.sample(range(1, amount + 1), amount)
+    # Generación de datos aleatorios para graficar
+    datos = random.sample(range(1, cantidad + 1), cantidad)
 
-    def draw_bars(values, colors):
-        """Draw the bars on the canvas based on the given values and colors."""
+    def dibujar_barras(arr, colores):
+        # Dibuja las barras en el canvas según los datos y colores proporcionados.
+
         canvas.delete("all")
 
-        canvas_width = canvas.winfo_width()
-        canvas_height = canvas.winfo_height()
+        c_width = canvas.winfo_width()
+        c_height = canvas.winfo_height()
 
-        count = len(values)
-        if count == 0:
+        n = len(arr)
+        if n == 0:
             return
 
-        bar_width = canvas_width / count
-        max_value = max(values) if max(values) != 0 else 1
+        ancho = c_width / n
+        max_val = max(arr) if max(arr) != 0 else 1
 
-        for index, value in enumerate(values):
-            x0 = int(index * bar_width)
-            x1 = int((index + 1) * bar_width)
-            y1 = canvas_height
-            y0 = int(canvas_height - (value / max_value) * (canvas_height - 50))  # top margin
-            canvas.create_rectangle(x0, y0, x1, y1, fill=colors[index], outline="")
+        for i, val in enumerate(arr):
+            x0 = int(i * ancho)
+            x1 = int((i + 1) * ancho)
+            y1 = c_height
+            y0 = int(c_height - (val / max_val) * (c_height - 50))  # margen arriba
 
-        vis_window.update_idletasks()
+            canvas.create_rectangle(x0, y0, x1, y1, fill=colores[i], outline="")
 
-    draw_bars.canvas = canvas
-    draw_bars.state = state
+        ventana_vis.update_idletasks()
 
-    def start_sorting():
-        """Start the selected sorting algorithm."""
-        if state["value"] != "stopped":
-            return
-        state["value"] = "running"
-        sort_function = load_sort_function(option_name)
-        if sort_function is None:
-            return
-        sort_function(data, draw_func=draw_bars, delay=speed)
+    dibujar_barras.canvas = canvas
+    dibujar_barras.estado = estado
 
-    def pause_resume():
-        """Pause or resume the algorithm execution depending on the current state."""
-        if state["value"] == "running":
-            state["value"] = "paused"
-        elif state["value"] == "paused":
-            state["value"] = "running"
+    # Funciones de control del estado
+    def iniciar_ordenamiento():
+        #Inicia el algoritmo de ordenamiento seleccionado.
 
-    def stop():
-        """Stop the algorithm execution."""
-        state["value"] = "stopped"
+        if estado["valor"] == "detenido":
+            estado["valor"] = "corriendo"
+            try:
+                # Carga dinámica del módulo y la función del algoritmo
+                modulo = nombre_opcion.title().replace(" ", "_")
+                funcion = nombre_opcion.lower().replace(" ", "_")
+                ruta_completa = f"Metodos_Ordenamiento.{modulo}"
+                algoritmo = importlib.import_module(ruta_completa)
+                algoritmo_funcion = getattr(algoritmo, funcion)
+                algoritmo_funcion(datos, draw_func=dibujar_barras, delay=velocidad)
+            except (ModuleNotFoundError, AttributeError) as e:
+                print(f"No se pudo cargar el algoritmo para: {nombre_opcion}")
+                print("Error:", e)
 
-    def go_back_to_settings():
-        """Close the current windows and go back to the settings screen."""
-        control_window.destroy()
-        vis_window.destroy()
-        settings_window(option_name, None)
+    def pausar_reanudar():
+        # Pausa o reanuda la ejecución del algoritmo según el estado actual.
 
-    info_text = f"Method: {option_name} | Speed: {speed} | Elements: {amount}"
-    info_font = (DEFAULT_FONT_NAME, 20)
+        if estado["valor"] == "corriendo":
+            estado["valor"] = "pausado"
+        elif estado["valor"] == "pausado":
+            estado["valor"] = "corriendo"
 
-    tk.Label(vis_window, text=info_text, font=info_font, fg="black", bg=BACKGROUND_COLOR).pack(side="bottom", pady=5)
+    def detener():
+        # Detiene la ejecución del algoritmo.
 
-    control_window = tk.Toplevel(vis_window)
-    control_window.title("Algorithm Controls")
-    control_window.geometry("1000x200+200+600")
-    control_window.configure(bg=BACKGROUND_COLOR)
+        estado["valor"] = "detenido"
 
-    control_title_image = PhotoImage(file=CONTROL_TITLE_PATH)
-    control_title_label = tk.Label(control_window, image=control_title_image, bg=BACKGROUND_COLOR)
-    control_title_label.image = control_title_image  # keep a reference to avoid garbage collection
-    control_title_label.pack(pady=5)
+    def regresar_ajustes():
+        # Cierra las ventanas actuales y regresa a la configuración.
 
-    buttons_info = [
-        ("\u2190 Back", go_back_to_settings, "rojo"),
-        ("Start", start_sorting, "verde"),
-        ("Pause/Resume", pause_resume, "azul"),
-        ("Stop", stop, "naranja"),
+        ventana_ctrl.destroy()
+        ventana_vis.destroy()
+        Ajustes(nombre_opcion, None)
+
+    # Etiqueta con información sobre el metodo seleccionado
+    info_text = f"Método: {nombre_opcion} | Velocidad: {velocidad} | Elementos: {cantidad}"
+    fuente_info = ("Pixelify Sans", 20)
+
+    label_info_vis = tk.Label(
+        ventana_vis,
+        text=info_text,
+        font=fuente_info,
+        fg="black",
+        bg="#e8e4e3"
+    )
+    label_info_vis.pack(side="bottom", pady=5)
+
+    # Configuración de la ventana de controles
+    ventana_ctrl = tk.Toplevel(ventana_vis)
+    ventana_ctrl.title("Controles del Algoritmo")
+    ventana_ctrl.geometry("1000x200+200+600")  # Posición debajo de la ventana principal
+    ventana_ctrl.configure(bg="#e8e4e3")
+
+    # Imagen de título de la ventana de control
+    titulo_ctrl = PhotoImage(file=RUTA_TITULO_CTRL)
+    tk.Label(ventana_ctrl, image=titulo_ctrl, bg="#e8e4e3").pack(pady=5)
+    ventana_ctrl.titulo_ctrl = titulo_ctrl  # Referencia para evitar pérdida de la imagen
+
+    # Configuración de los botones personalizados
+    botones_info = [
+        ("← Regresar", regresar_ajustes, "rojo"),
+        ("Iniciar", iniciar_ordenamiento, "verde"),
+        ("Pausar/Reanudar", pausar_reanudar, "azul"),
+        ("Detener", detener, "naranja")
     ]
 
-    button_images = {}
-    for _, _, color in buttons_info:
-        off_image = PhotoImage(file=os.path.join(BUTTONS_PATH, f"SBtn_{color}_off.png"))
-        on_image = PhotoImage(file=os.path.join(BUTTONS_PATH, f"SBtn_{color}_on.png"))
-        button_images[color] = (off_image, on_image)
+    imagenes_botones = {}
+    for _, _, color in botones_info:
+        img_off = PhotoImage(file=os.path.join(RUTA_BOTONES, f"SBtn_{color}_off.png"))
+        img_on = PhotoImage(file=os.path.join(RUTA_BOTONES, f"SBtn_{color}_on.png"))
+        imagenes_botones[color] = (img_off, img_on)
 
-    buttons_frame = tk.Frame(control_window, bg=BACKGROUND_COLOR)
-    buttons_frame.pack(pady=10)
+    frame_botones = tk.Frame(ventana_ctrl, bg="#e8e4e3")
+    frame_botones.pack(pady=10)
 
-    button_font = (DEFAULT_FONT_NAME, 16)
+    fuente_boton = ("Pixelify Sans", 16)
+    desplazamiento = 6
 
-    for text, action, color in buttons_info:
-        off_image, on_image = button_images[color]
-        create_standalone_button(
-            buttons_frame, off_image, on_image, action,
-            text=text, font=button_font, side="left", padx=10, pady=5
+    for texto, funcion, color in botones_info:
+        img_off, img_on = imagenes_botones[color]
+        btn_canvas = tk.Canvas(
+            frame_botones,
+            width=img_off.width(),
+            height=img_off.height(),
+            bg="#e8e4e3",
+            highlightthickness=0
+        )
+        btn_canvas.pack(side="left", padx=10, pady=5)
+
+        btn_img_id = btn_canvas.create_image(img_off.width() // 2, img_off.height() // 2, image=img_off)
+        btn_sombra_id = btn_canvas.create_text(
+            img_off.width() // 2 + 2,
+            img_off.height() // 2 + 2,
+            text=texto,
+            font=fuente_boton,
+            fill="black"
+        )
+        btn_texto_id = btn_canvas.create_text(
+            img_off.width() // 2,
+            img_off.height() // 2,
+            text=texto,
+            font=fuente_boton,
+            fill="white"
         )
 
-    tk.Label(
-        control_window, text=info_text, font=info_font, fg="black", bg=BACKGROUND_COLOR
-    ).pack(side="bottom", pady=5)
+        def presionar(event, canvas=btn_canvas, img_id=btn_img_id, texto_id=btn_texto_id, sombra_id=btn_sombra_id, col=color):
+            canvas.itemconfig(img_id, image=imagenes_botones[col][1])
+            canvas.itemconfig(texto_id, fill="#b0b0b0")
+            canvas.move(texto_id, 0, desplazamiento)
+            canvas.move(sombra_id, 0, desplazamiento)
 
-    vis_window.mainloop()
+        def soltar(event, canvas=btn_canvas, img_id=btn_img_id, texto_id=btn_texto_id, sombra_id=btn_sombra_id, col=color, func=funcion):
+            canvas.itemconfig(img_id, image=imagenes_botones[col][0])
+            canvas.itemconfig(texto_id, fill="white")
+            canvas.move(texto_id, 0, -desplazamiento)
+            canvas.move(sombra_id, 0, -desplazamiento)
+            func()
+
+        for item in [btn_img_id, btn_texto_id, btn_sombra_id]:
+            btn_canvas.tag_bind(item, "<ButtonPress-1>", presionar)
+            btn_canvas.tag_bind(item, "<ButtonRelease-1>", soltar)
+
+    # Etiqueta con información en la ventana de control
+    label_info_ctrl = tk.Label(
+        ventana_ctrl,
+        text=info_text,
+        font=fuente_info,
+        fg="black",
+        bg="#e8e4e3"
+    )
+    label_info_ctrl.pack(side="bottom", pady=5)
+
+    ventana_vis.mainloop()
 
 
-# =============================================================
-# COMPLEXITY WINDOW
-# =============================================================
+# --- VENTANA DE COMPLEJIDAD ---
+def Ventana_Complejidad(nombre_opcion):
 
-def complexity_window(option_name):
-    def generate_list(size):
-        return (
-            random.sample(range(1, size + 1), size)
-            if list_type.get() == "random"
-            else list(range(size, 0, -1))
-        )
+    def cargar_algoritmo(nombre):
+        modulo = nombre.title().replace(" ", "_")
+        funcion = nombre.lower().replace(" ", "_") + "_estudio"
+        try:
+            mod = importlib.import_module(f"Metodos_Ordenamiento.{modulo}")
+            return getattr(mod, funcion)
+        except Exception as e:
+            print(f"Error cargando '{nombre}': {e}")
+            return None
 
-    def update_chart():
+    def generar_lista(tamano):
+        return (random.sample(range(1, tamano + 1), tamano)
+                if tipo_lista.get() == "aleatoria"
+                else list(range(tamano, 0, -1)))
+
+    def actualizar_grafica():
         ax.clear()
-        ax.set_title(f"Complexity of {option_name}")
-        ax.set_xlabel("Number of elements")
-        ax.set_ylabel("Steps")
+        ax.set_title(f"Complejidad de {nombre_opcion}")
+        ax.set_xlabel("Cantidad de elementos")
+        ax.set_ylabel("Pasos")
         ax.grid(True)
         return ax.plot([], [], color="black", linewidth=2)[0]
 
-    def run_step():
-        nonlocal current_size, after_id
-        if not running.get():
-            after_id = vis_window.after(100, run_step)
+    def ejecutar_paso():
+        nonlocal tam_actual, id_paso
+        if not ejecutando.get():
+            id_paso = ventana_vis.after(100, ejecutar_paso)
             return
-        sample_list = generate_list(current_size)
-        steps.append(study_function(sample_list.copy()))
-        sizes.append(current_size)
-        plot_line.set_data(sizes, steps)
+        lista = generar_lista(tam_actual)
+        pasos.append(algoritmo_funcion(lista.copy()))
+        cantidades.append(tam_actual)
+        linea_plot.set_data(cantidades, pasos)
         ax.relim()
         ax.autoscale_view()
         canvas.draw()
-        current_size += 20
-        after_id = vis_window.after(100, run_step)
+        tam_actual += 20
+        id_paso = ventana_vis.after(100, ejecutar_paso)
 
-    def start_analysis(reset=False):
-        nonlocal current_size, sizes, steps, plot_line, after_id
-        if reset and after_id:
-            vis_window.after_cancel(after_id)
-        current_size = 20
-        sizes.clear()
-        steps.clear()
-        plot_line = update_chart()
+    def iniciar_analisis(reset=False):
+        nonlocal tam_actual, cantidades, pasos, linea_plot, id_paso
+        if reset and id_paso:
+            ventana_vis.after_cancel(id_paso)
+        tam_actual = 20
+        cantidades.clear()
+        pasos.clear()
+        linea_plot = actualizar_grafica()
         canvas.draw()
-        run_step()
+        ejecutar_paso()
 
-    def change_list_type(new_type):
-        list_type.set(new_type)
-        start_analysis(reset=True)
+    def cambiar_tipo(nuevo):
+        tipo_lista.set(nuevo)
+        iniciar_analisis(reset=True)
 
-    def toggle_pause():
-        running.set(not running.get())
+    def toggle_pausa():
+        ejecutando.set(not ejecutando.get())
+        txt = "Pausa/Reanudar"
+        canvas_pausar.itemconfig(pausar_text_id, text=txt)
 
-    def on_close():
-        """Cancel any pending callback and close both windows cleanly."""
-        if after_id:
-            vis_window.after_cancel(after_id)
-        control_window.destroy()
-        vis_window.destroy()
+    # --- Ventana de visualización ---
+    ventana_vis = tk.Toplevel()
+    ventana_vis.title("Pasos del Algoritmo")
+    ventana_vis.geometry("1000x470+200+100")
+    ventana_vis.configure(bg="#e8e4e3")
 
-    # --- Visualization window ---
-    vis_window = tk.Toplevel()
-    vis_window.title("Algorithm Steps")
-    vis_window.geometry("1000x470+200+100")
-    vis_window.configure(bg=BACKGROUND_COLOR)
-
-    figure, ax = plt.subplots(figsize=(7.5, 5))
-    figure.patch.set_facecolor(BACKGROUND_COLOR)
-    canvas = FigureCanvasTkAgg(figure, master=vis_window)
+    fig, ax = plt.subplots(figsize=(7.5, 5))
+    fig.patch.set_facecolor("#e8e4e3")
+    canvas = FigureCanvasTkAgg(fig, master=ventana_vis)
     canvas.get_tk_widget().pack(pady=10)
 
-    list_type = tk.StringVar(value="random")
-    running = tk.BooleanVar(value=True)
-    sizes, steps = [], []
-    current_size, after_id = 20, None
-    plot_line = None
+    tipo_lista = tk.StringVar(value="aleatoria")
+    ejecutando = tk.BooleanVar(value=True)
+    cantidades, pasos = [], []
+    tam_actual, id_paso = 20, None
+    linea_plot = None
 
-    study_function = load_study_function(option_name)
-    if study_function is None:
-        vis_window.destroy()
+    algoritmo_funcion = cargar_algoritmo(nombre_opcion)
+    if not algoritmo_funcion:
+        ventana_vis.destroy()
         return
 
-    vis_window.protocol("WM_DELETE_WINDOW", on_close)
+    # --- Ventana de controles ---
+    ventana_ctrl = tk.Toplevel(ventana_vis)
+    ventana_ctrl.title("Controles del Algoritmo")
+    ventana_ctrl.geometry("1000x200+200+600")
+    ventana_ctrl.configure(bg="#e8e4e3")
 
-    # --- Control window ---
-    control_window = tk.Toplevel(vis_window)
-    control_window.title("Algorithm Controls")
-    control_window.geometry("1000x200+200+600")
-    control_window.configure(bg=BACKGROUND_COLOR)
+    titulo_img = PhotoImage(file=RUTA_TITULO_COMPLEJIDAD)
+    lbl_titulo = tk.Label(ventana_ctrl, image=titulo_img, bg="#e8e4e3")
+    lbl_titulo.image = titulo_img
+    lbl_titulo.pack(pady=10)
 
-    complexity_title_image = PhotoImage(file=COMPLEXITY_TITLE_PATH)
-    title_label = tk.Label(control_window, image=complexity_title_image, bg=BACKGROUND_COLOR)
-    title_label.image = complexity_title_image
-    title_label.pack(pady=10)
+    frame_botones = tk.Frame(ventana_ctrl, bg="#e8e4e3")
+    frame_botones.pack(pady=10)
 
-    buttons_frame = tk.Frame(control_window, bg=BACKGROUND_COLOR)
-    buttons_frame.pack(pady=10)
+    fuente_boton = ("Pixelify Sans", 16)
+    desplazamiento = 6
 
-    button_font = (DEFAULT_FONT_NAME, 16)
+    # --- Botón Aleatoria ---
+    btn_aleatoria_off_img = PhotoImage(file=os.path.join(RUTA_BOTONES, "SBtn_verde_off.png"))
+    btn_aleatoria_on_img = PhotoImage(file=os.path.join(RUTA_BOTONES, "SBtn_verde_on.png"))
+    canvas_aleatoria = tk.Canvas(frame_botones, width=btn_aleatoria_off_img.width(),
+                                 height=btn_aleatoria_off_img.height(), bg="#e8e4e3", highlightthickness=0)
+    canvas_aleatoria.pack(side="left", padx=10)
+    aleatoria_img_id = canvas_aleatoria.create_image(btn_aleatoria_off_img.width()//2,
+                                                     btn_aleatoria_off_img.height()//2,
+                                                     image=btn_aleatoria_off_img)
+    aleatoria_sombra_id = canvas_aleatoria.create_text(btn_aleatoria_off_img.width()//2 + 2,
+                                                       btn_aleatoria_off_img.height()//2 + 2,
+                                                       text="Aleatoria", font=fuente_boton, fill="black")
+    aleatoria_text_id = canvas_aleatoria.create_text(btn_aleatoria_off_img.width()//2,
+                                                     btn_aleatoria_off_img.height()//2,
+                                                     text="Aleatoria", font=fuente_boton, fill="white")
+    def on_press_aleatoria(event):
+        canvas_aleatoria.itemconfig(aleatoria_img_id, image=btn_aleatoria_on_img)
+        canvas_aleatoria.itemconfig(aleatoria_text_id, fill="#b0b0b0")
+        canvas_aleatoria.move(aleatoria_text_id, 0, desplazamiento)
+        canvas_aleatoria.move(aleatoria_sombra_id, 0, desplazamiento)
 
-    random_off = PhotoImage(file=os.path.join(BUTTONS_PATH, "SBtn_verde_off.png"))
-    random_on = PhotoImage(file=os.path.join(BUTTONS_PATH, "SBtn_verde_on.png"))
-    create_standalone_button(
-        buttons_frame, random_off, random_on, lambda: change_list_type("random"),
-        text="Random", font=button_font, side="left", padx=10
+    def on_release_aleatoria(event):
+        canvas_aleatoria.itemconfig(aleatoria_img_id, image=btn_aleatoria_off_img)
+        canvas_aleatoria.itemconfig(aleatoria_text_id, fill="white")
+        canvas_aleatoria.move(aleatoria_text_id, 0, -desplazamiento)
+        canvas_aleatoria.move(aleatoria_sombra_id, 0, -desplazamiento)
+        cambiar_tipo("aleatoria")
+
+    for item in canvas_aleatoria.find_all():
+        canvas_aleatoria.tag_bind(item, "<ButtonPress-1>", on_press_aleatoria)
+        canvas_aleatoria.tag_bind(item, "<ButtonRelease-1>", on_release_aleatoria)
+
+    # --- Botón Inversa ---
+    btn_inversa_off_img = PhotoImage(file=os.path.join(RUTA_BOTONES, "SBtn_oro_off.png"))
+    btn_inversa_on_img = PhotoImage(file=os.path.join(RUTA_BOTONES, "SBtn_oro_on.png"))
+    canvas_inversa = tk.Canvas(frame_botones, width=btn_inversa_off_img.width(),
+                               height=btn_inversa_off_img.height(), bg="#e8e4e3", highlightthickness=0)
+    canvas_inversa.pack(side="left", padx=10)
+    inversa_img_id = canvas_inversa.create_image(btn_inversa_off_img.width()//2,
+                                                 btn_inversa_off_img.height()//2,
+                                                 image=btn_inversa_off_img)
+    inversa_sombra_id = canvas_inversa.create_text(btn_inversa_off_img.width()//2 + 2,
+                                                   btn_inversa_off_img.height()//2 + 2,
+                                                   text="Inversa", font=fuente_boton, fill="black")
+    inversa_text_id = canvas_inversa.create_text(btn_inversa_off_img.width()//2,
+                                                 btn_inversa_off_img.height()//2,
+                                                 text="Inversa", font=fuente_boton, fill="white")
+
+    def on_press_inversa(event):
+        canvas_inversa.itemconfig(inversa_img_id, image=btn_inversa_on_img)
+        canvas_inversa.itemconfig(inversa_text_id, fill="#b0b0b0")
+        canvas_inversa.move(inversa_text_id, 0, desplazamiento)
+        canvas_inversa.move(inversa_sombra_id, 0, desplazamiento)
+
+    def on_release_inversa(event):
+        canvas_inversa.itemconfig(inversa_img_id, image=btn_inversa_off_img)
+        canvas_inversa.itemconfig(inversa_text_id, fill="white")
+        canvas_inversa.move(inversa_text_id, 0, -desplazamiento)
+        canvas_inversa.move(inversa_sombra_id, 0, -desplazamiento)
+        cambiar_tipo("inversa")
+
+    for item in canvas_inversa.find_all():
+        canvas_inversa.tag_bind(item, "<ButtonPress-1>", on_press_inversa)
+        canvas_inversa.tag_bind(item, "<ButtonRelease-1>", on_release_inversa)
+
+    # --- Botón Pausar/Reanudar ---
+    btn_pausar_off_img = PhotoImage(file=os.path.join(RUTA_BOTONES, "SBtn_azul_off.png"))
+    btn_pausar_on_img = PhotoImage(file=os.path.join(RUTA_BOTONES, "SBtn_azul_on.png"))
+    canvas_pausar = tk.Canvas(frame_botones, width=btn_pausar_off_img.width(),
+                              height=btn_pausar_off_img.height(), bg="#e8e4e3", highlightthickness=0)
+    canvas_pausar.pack(side="left", padx=10)
+    pausar_img_id = canvas_pausar.create_image(btn_pausar_off_img.width()//2,
+                                               btn_pausar_off_img.height()//2,
+                                               image=btn_pausar_off_img)
+    pausar_sombra_id = canvas_pausar.create_text(btn_pausar_off_img.width()//2 + 2,
+                                                 btn_pausar_off_img.height()//2 + 2,
+                                                 text="Pausa/Reanudar", font=fuente_boton, fill="black")
+    pausar_text_id = canvas_pausar.create_text(btn_pausar_off_img.width()//2,
+                                               btn_pausar_off_img.height()//2,
+                                               text="Pausa/Reanudar", font=fuente_boton, fill="white")
+
+    def on_press_pausar(event):
+        canvas_pausar.itemconfig(pausar_img_id, image=btn_pausar_on_img)
+        canvas_pausar.itemconfig(pausar_text_id, fill="#b0b0b0")
+        canvas_pausar.move(pausar_text_id, 0, desplazamiento)
+        canvas_pausar.move(pausar_sombra_id, 0, desplazamiento)
+
+    def on_release_pausar(event):
+        canvas_pausar.itemconfig(pausar_img_id, image=btn_pausar_off_img)
+        canvas_pausar.itemconfig(pausar_text_id, fill="white")
+        canvas_pausar.move(pausar_text_id, 0, -desplazamiento)
+        canvas_pausar.move(pausar_sombra_id, 0, -desplazamiento)
+        toggle_pausa()
+
+    for item in canvas_pausar.find_all():
+        canvas_pausar.tag_bind(item, "<ButtonPress-1>", on_press_pausar)
+        canvas_pausar.tag_bind(item, "<ButtonRelease-1>", on_release_pausar)
+
+    # --- TEXTO PERSONALIZADO ---
+    lbl_texto = tk.Label(
+        ventana_ctrl,
+        text="| Cierra la ventana superior para eliminar esta ventana |",
+        font=("Pixelify Sans", 16),
+        fg="black",
+        bg="#e8e4e3"
     )
+    lbl_texto.pack(pady=10)
 
-    reverse_off = PhotoImage(file=os.path.join(BUTTONS_PATH, "SBtn_oro_off.png"))
-    reverse_on = PhotoImage(file=os.path.join(BUTTONS_PATH, "SBtn_oro_on.png"))
-    create_standalone_button(
-        buttons_frame, reverse_off, reverse_on, lambda: change_list_type("reverse"),
-        text="Reverse", font=button_font, side="left", padx=10
-    )
-
-    pause_off = PhotoImage(file=os.path.join(BUTTONS_PATH, "SBtn_azul_off.png"))
-    pause_on = PhotoImage(file=os.path.join(BUTTONS_PATH, "SBtn_azul_on.png"))
-    create_standalone_button(
-        buttons_frame, pause_off, pause_on, toggle_pause,
-        text="Pause/Resume", font=button_font, side="left", padx=10
-    )
-
-    tk.Label(
-        control_window,
-        text="| Close the window above to remove this one |",
-        font=(DEFAULT_FONT_NAME, 16), fg="black", bg=BACKGROUND_COLOR
-    ).pack(pady=10)
-
-    vis_window.mainloop()
+    ventana_vis.mainloop()

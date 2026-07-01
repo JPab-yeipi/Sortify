@@ -1,6 +1,6 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def bitwise_sort(arr, draw_func, delay):
-    state = draw_func.state
+    estado = draw_func.estado
 
     if len(arr) == 0:
         return
@@ -11,9 +11,9 @@ def bitwise_sort(arr, draw_func, delay):
     def sort_bit(bit_index, i=0, zero_bucket=None, one_bucket=None):
         nonlocal arr
 
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        if state["value"] == "paused":
+        if estado["valor"] == "pausado":
             draw_func.canvas.after(100, lambda: sort_bit(bit_index, i, zero_bucket, one_bucket))
             return
 
@@ -39,26 +39,26 @@ def bitwise_sort(arr, draw_func, delay):
     sort_bit(0)
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def bitwise_sort_estudio(values):
-    steps = 0
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def bitwise_sort_estudio(lista):
+    pasos = 0
 
-    if len(values) == 0:
-        return steps
+    if len(lista) == 0:
+        return pasos
 
-    max_val = max(values)
+    max_val = max(lista)
     max_bits = max_val.bit_length()
 
     for bit_index in range(max_bits):
         zero_bucket = []
         one_bucket = []
-        for num in values:
-            steps += 1
+        for num in lista:
+            pasos += 1
             if (num >> bit_index) & 1 == 0:
                 zero_bucket.append(num)
             else:
                 one_bucket.append(num)
-        values[:] = zero_bucket + one_bucket
-        steps += len(values)
+        lista[:] = zero_bucket + one_bucket
+        pasos += len(lista)
 
-    return steps
+    return pasos

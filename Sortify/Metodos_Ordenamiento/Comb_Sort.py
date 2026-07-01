@@ -1,18 +1,18 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def comb_sort(arr, draw_func, delay):
-    state = draw_func.state
+    estado = draw_func.estado
     n = len(arr)
     gap = n
     shrink = 1.3
     sorted_flag = False
 
-    def step():
+    def paso():
         nonlocal gap, sorted_flag
 
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        elif state["value"] == "paused":
-            draw_func.canvas.after(100, step)
+        elif estado["valor"] == "pausado":
+            draw_func.canvas.after(100, paso)
             return
 
         if gap > 1:
@@ -23,12 +23,12 @@ def comb_sort(arr, draw_func, delay):
 
         i = 0
 
-        def compare_step():
+        def comparar():
             nonlocal i, sorted_flag
-            if state["value"] == "stopped":
+            if estado["valor"] == "detenido":
                 return
-            elif state["value"] == "paused":
-                draw_func.canvas.after(100, compare_step)
+            elif estado["valor"] == "pausado":
+                draw_func.canvas.after(100, comparar)
                 return
 
             if i + gap < n:
@@ -38,22 +38,22 @@ def comb_sort(arr, draw_func, delay):
 
                 draw_func(arr, ["red" if x == i or x == i + gap else "gray" for x in range(n)])
                 i += 1
-                draw_func.canvas.after(int(delay * 100), compare_step)
+                draw_func.canvas.after(int(delay * 100), comparar)
             else:
                 if not sorted_flag or gap != 1:
-                    draw_func.canvas.after(1, step)
+                    draw_func.canvas.after(1, paso)
                 else:
                     draw_func(arr, ["green"] * n)
 
-        compare_step()
+        comparar()
 
-    step()
+    paso()
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def comb_sort_estudio(values):
-    steps = 0
-    n = len(values)
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def comb_sort_estudio(lista):
+    pasos = 0
+    n = len(lista)
     gap = n
     shrink = 1.3
 
@@ -67,14 +67,14 @@ def comb_sort_estudio(values):
 
         i = 0
         while i + gap < n:
-            steps += 1
-            if values[i] > values[i + gap]:
-                values[i], values[i + gap] = values[i + gap], values[i]
-                steps += 2
+            pasos += 1
+            if lista[i] > lista[i + gap]:
+                lista[i], lista[i + gap] = lista[i + gap], lista[i]
+                pasos += 2
                 sorted_flag = False
             i += 1
 
         if gap == 1 and sorted_flag:
             break
 
-    return steps
+    return pasos

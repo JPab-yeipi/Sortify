@@ -1,14 +1,14 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def heap_sort(arr, draw_func, delay):
-    state = draw_func.state
+    estado = draw_func.estado
     n = len(arr)
-    build_index = n // 2 - 1
-    extract_index = n - 1
+    i_build = n // 2 - 1
+    i_extract = n - 1
 
     def heapify(n, i, callback):
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        if state["value"] == "paused":
+        if estado["valor"] == "pausado":
             draw_func.canvas.after(100, lambda: heapify(n, i, callback))
             return
 
@@ -28,80 +28,80 @@ def heap_sort(arr, draw_func, delay):
         else:
             draw_func.canvas.after(1, callback)
 
-    def build_heap():
-        nonlocal build_index
-        if build_index >= 0:
-            heapify(n, build_index, lambda: build_heap_step())
+    def construir_heap():
+        nonlocal i_build
+        if i_build >= 0:
+            heapify(n, i_build, lambda: construir_heap_step())
         else:
-            extract()
+            extraer()
 
-    def build_heap_step():
-        nonlocal build_index
-        build_index -= 1
-        draw_func.canvas.after(1, build_heap)
+    def construir_heap_step():
+        nonlocal i_build
+        i_build -= 1
+        draw_func.canvas.after(1, construir_heap)
 
-    def extract():
-        nonlocal extract_index
-        if extract_index > 0:
-            arr[extract_index], arr[0] = arr[0], arr[extract_index]
-            draw_func(arr, ["green" if x >= extract_index else "gray" for x in range(len(arr))])
-            draw_func.canvas.after(int(delay * 100), lambda: heapify(extract_index, 0, lambda: extract_step()))
+    def extraer():
+        nonlocal i_extract
+        if i_extract > 0:
+            arr[i_extract], arr[0] = arr[0], arr[i_extract]
+            draw_func(arr, ["green" if x >= i_extract else "gray" for x in range(len(arr))])
+            draw_func.canvas.after(int(delay * 100), lambda: heapify(i_extract, 0, lambda: extraer_step()))
         else:
             draw_func(arr, ["green"] * n)
 
-    def extract_step():
-        nonlocal extract_index
-        extract_index -= 1
-        draw_func.canvas.after(1, extract)
+    def extraer_step():
+        nonlocal i_extract
+        i_extract -= 1
+        draw_func.canvas.after(1, extraer)
 
-    build_heap()
+    construir_heap()
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def heap_sort_estudio(values):
-    steps = 0
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def heap_sort_estudio(lista):
+    pasos = 0
 
     def heapify(n, i):
-        nonlocal steps
+        nonlocal pasos
         largest = i
         left = 2 * i + 1
         right = 2 * i + 2
 
-        # Compare with left child
+        # Comparar con hijo izquierdo
         if left < n:
-            steps += 1  # index comparison
-            steps += 1  # value comparison
-            if values[left] > values[largest]:
+            pasos += 1  # Comparación por índice
+            pasos += 1  # Comparación de valores
+            if lista[left] > lista[largest]:
                 largest = left
         else:
-            steps += 1  # failed index comparison
+            pasos += 1  # Comparación fallida por índice
 
-        # Compare with right child
+        # Comparar con hijo derecho
         if right < n:
-            steps += 1
-            steps += 1
-            if values[right] > values[largest]:
+            pasos += 1
+            pasos += 1
+            if lista[right] > lista[largest]:
                 largest = right
         else:
-            steps += 1
+            pasos += 1
 
-        # Swap if needed
+        # Si hay que intercambiar
         if largest != i:
-            values[i], values[largest] = values[largest], values[i]
-            steps += 1  # swap
-            heapify(n, largest)  # recursive call
+            lista[i], lista[largest] = lista[largest], lista[i]
+            pasos += 1  # Intercambio
+            heapify(n, largest)  # Recursivo
 
-    n = len(values)
+    n = len(lista)
 
-    # Build the heap
+    # Construcción del heap
     for i in range(n // 2 - 1, -1, -1):
-        steps += 1  # control step
+        pasos += 1  # Paso de control
         heapify(n, i)
 
-    # Extract the max and re-heapify
+    # Extracción del máximo y reheapify
     for i in range(n - 1, 0, -1):
-        values[i], values[0] = values[0], values[i]
-        steps += 1  # swap
+        lista[i], lista[0] = lista[0], lista[i]
+        pasos += 1  # Intercambio
         heapify(i, 0)
 
-    return steps
+    return pasos

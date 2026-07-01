@@ -1,11 +1,11 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def merge_sort(arr, draw_func, delay):
-    state = draw_func.state
+    estado = draw_func.estado
 
     def merge_sort_recursive(start, end, callback):
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        if state["value"] == "paused":
+        if estado["valor"] == "pausado":
             draw_func.canvas.after(100, lambda: merge_sort_recursive(start, end, callback))
             return
 
@@ -16,9 +16,9 @@ def merge_sort(arr, draw_func, delay):
             draw_func.canvas.after(1, callback)
 
     def merge(start, mid, end, callback):
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        if state["value"] == "paused":
+        if estado["valor"] == "pausado":
             draw_func.canvas.after(100, lambda: merge(start, mid, end, callback))
             return
 
@@ -29,9 +29,9 @@ def merge_sort(arr, draw_func, delay):
 
         def merge_step():
             nonlocal i, j, k
-            if state["value"] == "stopped":
+            if estado["valor"] == "detenido":
                 return
-            if state["value"] == "paused":
+            if estado["valor"] == "pausado":
                 draw_func.canvas.after(100, merge_step)
                 return
 
@@ -65,41 +65,42 @@ def merge_sort(arr, draw_func, delay):
     merge_sort_recursive(0, len(arr) - 1, lambda: draw_func(arr, ["green"] * len(arr)))
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def merge_sort_estudio(values):
-    steps = 0
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def merge_sort_estudio(lista):
+    pasos = 0
 
     def merge(left, right):
-        nonlocal steps
+        nonlocal pasos
         result = []
         i = j = 0
         while i < len(left) and j < len(right):
-            steps += 1
+            pasos += 1
             if left[i] <= right[j]:
                 result.append(left[i])
                 i += 1
             else:
                 result.append(right[j])
                 j += 1
-            steps += 1
+            pasos += 1
 
         result.extend(left[i:])
         result.extend(right[j:])
-        steps += len(left[i:]) + len(right[j:])
+        pasos += len(left[i:]) + len(right[j:])
         return result
 
-    def merge_sort_recursive(sub_array):
-        if len(sub_array) <= 1:
-            return sub_array
+    def merge_sort_recursive(sub_arr):
+        if len(sub_arr) <= 1:
+            return sub_arr
 
-        mid = len(sub_array) // 2
-        left = merge_sort_recursive(sub_array[:mid])
-        right = merge_sort_recursive(sub_array[mid:])
+        mid = len(sub_arr) // 2
+        left = merge_sort_recursive(sub_arr[:mid])
+        right = merge_sort_recursive(sub_arr[mid:])
         return merge(left, right)
 
-    result = merge_sort_recursive(values)
-    for i in range(len(values)):
-        values[i] = result[i]
-        steps += 1
+    resultado = merge_sort_recursive(lista)
+    for i in range(len(lista)):
+        lista[i] = resultado[i]
+        pasos += 1
 
-    return steps
+    return pasos
+

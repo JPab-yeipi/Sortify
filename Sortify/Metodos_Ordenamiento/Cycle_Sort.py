@@ -1,14 +1,14 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def cycle_sort(arr, draw_func, delay):
-    state = draw_func.state
+    estado = draw_func.estado
     n = len(arr)
 
-    def cycle(cycle_start):
-        if cycle_start >= n - 1 or state["value"] == "stopped":
+    def ciclo(cycle_start):
+        if cycle_start >= n - 1 or estado["valor"] == "detenido":
             draw_func(arr, ["green"] * n)
             return
-        if state["value"] == "paused":
-            draw_func.canvas.after(100, lambda: cycle(cycle_start))
+        if estado["valor"] == "pausado":
+            draw_func.canvas.after(100, lambda: ciclo(cycle_start))
             return
 
         item = arr[cycle_start]
@@ -19,7 +19,7 @@ def cycle_sort(arr, draw_func, delay):
                 pos += 1
 
         if pos == cycle_start:
-            draw_func.canvas.after(1, lambda: cycle(cycle_start + 1))
+            draw_func.canvas.after(1, lambda: ciclo(cycle_start + 1))
             return
 
         while item == arr[pos]:
@@ -27,76 +27,76 @@ def cycle_sort(arr, draw_func, delay):
         arr[pos], item = item, arr[pos]
         draw_func(arr, ["orange" if x == pos else "gray" for x in range(n)])
 
-        def resume_cycle(current_pos, current_item):
-            if state["value"] == "stopped":
+        def continuar(pos_actual, item_actual):
+            if estado["valor"] == "detenido":
                 return
-            if state["value"] == "paused":
-                draw_func.canvas.after(100, lambda: resume_cycle(current_pos, current_item))
+            if estado["valor"] == "pausado":
+                draw_func.canvas.after(100, lambda: continuar(pos_actual, item_actual))
                 return
 
             new_pos = cycle_start
             for i in range(cycle_start + 1, n):
-                if arr[i] < current_item:
+                if arr[i] < item_actual:
                     new_pos += 1
 
-            while current_item == arr[new_pos]:
+            while item_actual == arr[new_pos]:
                 new_pos += 1
 
             if new_pos >= len(arr):
-                draw_func.canvas.after(1, lambda: cycle(cycle_start + 1))
+                draw_func.canvas.after(1, lambda: ciclo(cycle_start + 1))
                 return
 
-            arr[new_pos], current_item = current_item, arr[new_pos]
+            arr[new_pos], item_actual = item_actual, arr[new_pos]
             draw_func(arr, ["red" if x == new_pos else "gray" for x in range(n)])
 
             if new_pos != cycle_start:
-                draw_func.canvas.after(int(delay * 100), lambda: resume_cycle(new_pos, current_item))
+                draw_func.canvas.after(int(delay * 100), lambda: continuar(new_pos, item_actual))
             else:
-                draw_func.canvas.after(int(delay * 100), lambda: cycle(cycle_start + 1))
+                draw_func.canvas.after(int(delay * 100), lambda: ciclo(cycle_start + 1))
 
-        draw_func.canvas.after(int(delay * 100), lambda: resume_cycle(pos, item))
+        draw_func.canvas.after(int(delay * 100), lambda: continuar(pos, item))
 
-    cycle(0)
+    ciclo(0)
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def cycle_sort_estudio(values):
-    steps = 0
-    n = len(values)
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def cycle_sort_estudio(lista):
+    pasos = 0
+    n = len(lista)
 
     for cycle_start in range(n - 1):
-        item = values[cycle_start]
+        item = lista[cycle_start]
         pos = cycle_start
 
         for i in range(cycle_start + 1, n):
-            steps += 1
-            if values[i] < item:
+            pasos += 1
+            if lista[i] < item:
                 pos += 1
 
         if pos == cycle_start:
             continue
 
-        while item == values[pos]:
+        while item == lista[pos]:
             pos += 1
-            steps += 1
+            pasos += 1
 
         if pos < n:
-            values[pos], item = item, values[pos]
-            steps += 1
+            lista[pos], item = item, lista[pos]
+            pasos += 1
 
         while pos != cycle_start:
             pos = cycle_start
             for i in range(cycle_start + 1, n):
-                steps += 1
-                if values[i] < item:
+                pasos += 1
+                if lista[i] < item:
                     pos += 1
 
-            while pos < n and item == values[pos]:
+            while pos < n and item == lista[pos]:
                 pos += 1
-                steps += 1
+                pasos += 1
 
             if pos < n:
-                values[pos], item = item, values[pos]
-                steps += 1
+                lista[pos], item = item, lista[pos]
+                pasos += 1
 
-    return steps
+    return pasos

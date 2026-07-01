@@ -1,15 +1,15 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def selection_sort(arr, draw_func, delay):
-    state = draw_func.state
+    estado = draw_func.estado
     n = len(arr)
     i = 0
 
-    def outer_step():
+    def paso_externo():
         nonlocal i
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        if state["value"] == "paused":
-            draw_func.canvas.after(100, outer_step)
+        if estado["valor"] == "pausado":
+            draw_func.canvas.after(100, paso_externo)
             return
         if i >= n:
             draw_func(arr, ["green"] * n)
@@ -18,12 +18,12 @@ def selection_sort(arr, draw_func, delay):
         min_idx = i
         j = i + 1
 
-        def find_minimum():
+        def buscar_minimo():
             nonlocal j, min_idx, i
-            if state["value"] == "stopped":
+            if estado["valor"] == "detenido":
                 return
-            if state["value"] == "paused":
-                draw_func.canvas.after(100, find_minimum)
+            if estado["valor"] == "pausado":
+                draw_func.canvas.after(100, buscar_minimo)
                 return
 
             if j < n:
@@ -35,28 +35,28 @@ def selection_sort(arr, draw_func, delay):
                     "green" if x < i else "gray" for x in range(n)
                 ])
                 j += 1
-                draw_func.canvas.after(int(delay * 100), find_minimum)
+                draw_func.canvas.after(int(delay * 100), buscar_minimo)
             else:
                 arr[i], arr[min_idx] = arr[min_idx], arr[i]
                 draw_func(arr, ["green" if x <= i else "gray" for x in range(n)])
                 i += 1
-                draw_func.canvas.after(int(delay * 100), outer_step)
+                draw_func.canvas.after(int(delay * 100), paso_externo)
 
-        find_minimum()
+        buscar_minimo()
 
-    outer_step()
+    paso_externo()
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def selection_sort_estudio(values):
-    steps = 0
-    n = len(values)
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def selection_sort_estudio(lista):
+    pasos = 0
+    n = len(lista)
     for i in range(n):
         min_idx = i
         for j in range(i + 1, n):
-            steps += 1
-            if values[j] < values[min_idx]:
+            pasos += 1
+            if lista[j] < lista[min_idx]:
                 min_idx = j
-        values[i], values[min_idx] = values[min_idx], values[i]
-        steps += 1
-    return steps
+        lista[i], lista[min_idx] = lista[min_idx], lista[i]
+        pasos += 1
+    return pasos

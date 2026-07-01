@@ -1,58 +1,58 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def insertion_sort(arr, draw_func, delay):
-    state = draw_func.state
+    estado = draw_func.estado
 
-    def step(i):
-        if state["value"] == "stopped":
+    def paso(i):
+        if estado["valor"] == "detenido":
             return
-        elif state["value"] == "paused":
-            draw_func.canvas.after(100, lambda: step(i))
+        elif estado["valor"] == "pausado":
+            draw_func.canvas.after(100, lambda: paso(i))
             return
 
         if i < len(arr):
             key = arr[i]
             j = i - 1
 
-            def move(j_inner):
-                if state["value"] == "stopped":
+            def mover(j_interno):
+                if estado["valor"] == "detenido":
                     return
-                elif state["value"] == "paused":
-                    draw_func.canvas.after(100, lambda: move(j_inner))
+                elif estado["valor"] == "pausado":
+                    draw_func.canvas.after(100, lambda: mover(j_interno))
                     return
 
-                if j_inner >= 0 and arr[j_inner] > key:
-                    arr[j_inner + 1] = arr[j_inner]
-                    draw_func(arr, ["orange" if x == j_inner or x == i else "gray" for x in range(len(arr))])
-                    draw_func.canvas.after(int(delay * 100), lambda: move(j_inner - 1))
+                if j_interno >= 0 and arr[j_interno] > key:
+                    arr[j_interno + 1] = arr[j_interno]
+                    draw_func(arr, ["orange" if x == j_interno or x == i else "gray" for x in range(len(arr))])
+                    draw_func.canvas.after(int(delay * 100), lambda: mover(j_interno - 1))
                 else:
-                    arr[j_inner + 1] = key
+                    arr[j_interno + 1] = key
                     draw_func(arr, ["green" if x <= i else "gray" for x in range(len(arr))])
-                    draw_func.canvas.after(int(delay * 100), lambda: step(i + 1))
+                    draw_func.canvas.after(int(delay * 100), lambda: paso(i + 1))
 
-            move(j)
+            mover(j)
         else:
             draw_func(arr, ["green"] * len(arr))
 
-    step(1)
+    paso(1)
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def insertion_sort_estudio(values):
-    steps = 0
-    for i in range(1, len(values)):
-        key = values[i]
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def insertion_sort_estudio(lista):
+    pasos = 0
+    for i in range(1, len(lista)):
+        key = lista[i]
         j = i - 1
 
         while j >= 0:
-            steps += 1
-            if values[j] > key:
-                values[j + 1] = values[j]
-                steps += 1
+            pasos += 1
+            if lista[j] > key:
+                lista[j + 1] = lista[j]
+                pasos += 1
                 j -= 1
             else:
                 break
 
-        values[j + 1] = key
-        steps += 1
+        lista[j + 1] = key
+        pasos += 1
 
-    return steps
+    return pasos

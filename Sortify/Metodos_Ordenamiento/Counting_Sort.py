@@ -1,25 +1,25 @@
-# Animated algorithm (used by the visualization/chart window)
+# Algoritmo con visualización animada (usado en la graficadora)
 def counting_sort(arr, draw_func, delay):
-    state = draw_func.state
+    estado = draw_func.estado
 
     if len(arr) == 0:
         return
 
     max_val = max(arr)
     min_val = min(arr)
-    value_range = max_val - min_val + 1
+    rango = max_val - min_val + 1
 
-    count = [0] * value_range
+    count = [0] * rango
     output = [0] * len(arr)
 
     i = 0
 
-    def count_step():
+    def contar():
         nonlocal i
-        if state["value"] == "stopped":
+        if estado["valor"] == "detenido":
             return
-        elif state["value"] == "paused":
-            draw_func.canvas.after(100, count_step)
+        elif estado["valor"] == "pausado":
+            draw_func.canvas.after(100, contar)
             return
 
         if i < len(arr):
@@ -27,28 +27,28 @@ def counting_sort(arr, draw_func, delay):
             count[num - min_val] += 1
             draw_func(arr, ["purple" if x == i else "gray" for x in range(len(arr))])
             i += 1
-            draw_func.canvas.after(int(delay * 100), count_step)
+            draw_func.canvas.after(int(delay * 100), contar)
         else:
-            accumulate(1)
+            acumular(1)
 
-    def accumulate(j):
-        if state["value"] == "stopped":
+    def acumular(j):
+        if estado["valor"] == "detenido":
             return
-        elif state["value"] == "paused":
-            draw_func.canvas.after(100, lambda: accumulate(j))
+        elif estado["valor"] == "pausado":
+            draw_func.canvas.after(100, lambda: acumular(j))
             return
 
         if j < len(count):
             count[j] += count[j - 1]
-            draw_func.canvas.after(1, lambda: accumulate(j + 1))
+            draw_func.canvas.after(1, lambda: acumular(j + 1))
         else:
-            fill_output(len(arr) - 1)
+            llenar_salida(len(arr) - 1)
 
-    def fill_output(k):
-        if state["value"] == "stopped":
+    def llenar_salida(k):
+        if estado["valor"] == "detenido":
             return
-        elif state["value"] == "paused":
-            draw_func.canvas.after(100, lambda: fill_output(k))
+        elif estado["valor"] == "pausado":
+            draw_func.canvas.after(100, lambda: llenar_salida(k))
             return
 
         if k >= 0:
@@ -57,56 +57,56 @@ def counting_sort(arr, draw_func, delay):
             output[index] = num
             count[num - min_val] -= 1
             draw_func(output, ["blue" if x == index else "gray" for x in range(len(output))])
-            draw_func.canvas.after(int(delay * 100), lambda: fill_output(k - 1))
+            draw_func.canvas.after(int(delay * 100), lambda: llenar_salida(k - 1))
         else:
-            write_final(0)
+            escribir_final(0)
 
-    def write_final(i):
-        if state["value"] == "stopped":
+    def escribir_final(i):
+        if estado["valor"] == "detenido":
             return
-        elif state["value"] == "paused":
-            draw_func.canvas.after(100, lambda: write_final(i))
+        elif estado["valor"] == "pausado":
+            draw_func.canvas.after(100, lambda: escribir_final(i))
             return
 
         if i < len(arr):
             arr[i] = output[i]
             draw_func(arr, ["green" if x == i else "gray" for x in range(len(arr))])
-            draw_func.canvas.after(int(delay * 100), lambda: write_final(i + 1))
+            draw_func.canvas.after(int(delay * 100), lambda: escribir_final(i + 1))
         else:
             draw_func(arr, ["green"] * len(arr))
 
-    count_step()
+    contar()
 
 
-# Non-visual algorithm, used for complexity analysis (complexity_window)
-def counting_sort_estudio(values):
-    steps = 0
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def counting_sort_estudio(lista):
+    pasos = 0
 
-    if len(values) == 0:
-        return steps
+    if len(lista) == 0:
+        return pasos
 
-    max_val = max(values)
-    min_val = min(values)
-    value_range = max_val - min_val + 1
+    max_val = max(lista)
+    min_val = min(lista)
+    rango = max_val - min_val + 1
 
-    count = [0] * value_range
-    output = [0] * len(values)
+    count = [0] * rango
+    output = [0] * len(lista)
 
-    for num in values:
+    for num in lista:
         count[num - min_val] += 1
-        steps += 1
+        pasos += 1
 
     for i in range(1, len(count)):
         count[i] += count[i - 1]
-        steps += 1
+        pasos += 1
 
-    for num in reversed(values):
+    for num in reversed(lista):
         output[count[num - min_val] - 1] = num
         count[num - min_val] -= 1
-        steps += 2
+        pasos += 2
 
-    for i in range(len(values)):
-        values[i] = output[i]
-        steps += 1
+    for i in range(len(lista)):
+        lista[i] = output[i]
+        pasos += 1
 
-    return steps
+    return pasos

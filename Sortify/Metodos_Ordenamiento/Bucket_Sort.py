@@ -1,90 +1,85 @@
-# Bucket Sort algorithm with animated visualization for the charting tool.
+# Algoritmo con visualización animada (usado en la graficadora)
 def bucket_sort(arr, draw_func, delay):
-    state = draw_func.state
-    n = len(arr)
+    estado = draw_func.estado
 
-    if n == 0:
+    if len(arr) == 0:
         return
 
     max_val = max(arr)
-    bucket_range = max_val / n
-    buckets = [[] for _ in range(n)]
-    insertion_idx = 0
+    size = max_val / len(arr)
+    buckets = [[] for _ in range(len(arr))]
 
-    def distribute_into_buckets(i):
-        if state["valor"] == "detenido":
+    i_insert = 0
+
+    def colocar_en_buckets(i):
+        if estado["valor"] == "detenido":
             return
-        if state["valor"] == "pausado":
-            draw_func.canvas.after(100, lambda: distribute_into_buckets(i))
+        elif estado["valor"] == "pausado":
+            draw_func.canvas.after(100, lambda: colocar_en_buckets(i))
             return
 
-        if i < n:
+        if i < len(arr):
             num = arr[i]
-            bucket_idx = int(num / bucket_range)
-            
-            if bucket_idx != n:
-                buckets[bucket_idx].append(num)
+            index = int(num / size)
+            if index != len(arr):
+                buckets[index].append(num)
             else:
-                buckets[n - 1].append(num)
+                buckets[len(arr) - 1].append(num)
 
-            colors = ["blue" if x == i else "gray" for x in range(n)]
-            draw_func(arr, colors)
-            draw_func.canvas.after(int(delay * 100), lambda: distribute_into_buckets(i + 1))
+            draw_func(arr, ["blue" if x == i else "gray" for x in range(len(arr))])
+            draw_func.canvas.after(int(delay * 100), lambda: colocar_en_buckets(i + 1))
         else:
-            sort_and_merge_buckets(0, 0)
+            ordenar_buckets(0, 0)
 
-    def sort_and_merge_buckets(bucket_idx, pos):
-        if state["valor"] == "detenido":
+    def ordenar_buckets(b, pos):
+        if estado["valor"] == "detenido":
             return
-        if state["valor"] == "pausado":
-            draw_func.canvas.after(100, lambda: sort_and_merge_buckets(bucket_idx, pos))
+        elif estado["valor"] == "pausado":
+            draw_func.canvas.after(100, lambda: ordenar_buckets(b, pos))
             return
 
-        nonlocal insertion_idx
+        nonlocal i_insert
 
-        if bucket_idx < len(buckets):
-            sorted_bucket = sorted(buckets[bucket_idx])
-            if pos < len(sorted_bucket):
-                arr[insertion_idx] = sorted_bucket[pos]
-                colors = ["green" if x == insertion_idx else "gray" for x in range(n)]
-                draw_func(arr, colors)
-                insertion_idx += 1
-                draw_func.canvas.after(int(delay * 100), lambda: sort_and_merge_buckets(bucket_idx, pos + 1))
+        if b < len(buckets):
+            bucket = sorted(buckets[b])
+            if pos < len(bucket):
+                arr[i_insert] = bucket[pos]
+                draw_func(arr, ["green" if x == i_insert else "gray" for x in range(len(arr))])
+                i_insert += 1
+                draw_func.canvas.after(int(delay * 100), lambda: ordenar_buckets(b, pos + 1))
             else:
-                draw_func.canvas.after(1, lambda: sort_and_merge_buckets(bucket_idx + 1, 0))
+                draw_func.canvas.after(1, lambda: ordenar_buckets(b + 1, 0))
         else:
-            draw_func(arr, ["green"] * n)
+            draw_func(arr, ["green"] * len(arr))
 
-    distribute_into_buckets(0)
+    colocar_en_buckets(0)
 
 
-# Non-visual Bucket Sort algorithm used for complexity analysis.  
-def bucket_sort_estudio(values):
+# Algoritmo sin visualización, usado para análisis de complejidad (Ventana_Complejidad)
+def bucket_sort_estudio(lista):
+    pasos = 0
 
-    steps = 0
-    n = len(values)
+    if len(lista) == 0:
+        return pasos
 
-    if n == 0:
-        return steps
+    max_val = max(lista)
+    size = max_val / len(lista)
+    buckets = [[] for _ in range(len(lista))]
 
-    max_val = max(values)
-    bucket_range = max_val / n
-    buckets = [[] for _ in range(n)]
-
-    for num in values:
-        bucket_idx = int(num / bucket_range)
-        if bucket_idx != n:
-            buckets[bucket_idx].append(num)
+    for num in lista:
+        index = int(num / size)
+        if index != len(lista):
+            buckets[index].append(num)
         else:
-            buckets[n - 1].append(num)
-        steps += 1
+            buckets[len(lista) - 1].append(num)
+        pasos += 1
 
-    idx = 0
+    i = 0
     for bucket in buckets:
         bucket.sort()
         for num in bucket:
-            values[idx] = num
-            steps += 1
-            idx += 1
+            lista[i] = num
+            pasos += 1
+            i += 1
 
-    return steps
+    return pasos
